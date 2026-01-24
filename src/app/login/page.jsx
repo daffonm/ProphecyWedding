@@ -1,3 +1,47 @@
+"use client";
+
+import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { useRouter } from "next/navigation";
+
+
 export default function Login() {
-    return <div>Login Page</div>;
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const { login, logout } = useAuth();
+    const router = useRouter();
+
+    const handleLogin = async () => {
+        try {
+            await login(email, password);
+            router.push("/");
+        } catch (error) {
+            console.error("Login failed:", error);
+        }
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+    };
+
+
+    return (
+        <div className="container mx-auto py-20">
+            <h1>Login Page</h1>
+            <div className="flex flex-col gap-4">
+                <input type="email" name="email" id="1" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+                <input type="password" name="password" id="2" placeholder="Password" onChange={(e) => setPassword(e.target.value)}/>
+            </div>
+                <div className="flex-col gap-4">
+                        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={handleLogin}>Sign In</button>
+                        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={handleLogout}>Sign Out</button>
+                    <p>Don't have an account? <a href="/register">click here to register</a></p>
+                </div>
+        </div>
+    )
 }

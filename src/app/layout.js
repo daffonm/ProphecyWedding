@@ -1,4 +1,5 @@
 import "./globals.css";
+import AuthProvider from "../context/AuthContext";
 
 export const metadata = {
   title: "Create Next App",
@@ -10,11 +11,13 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="preconnect" href="https://fonts.gstatic.com"/>
         <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
