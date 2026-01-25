@@ -10,6 +10,9 @@ import {
   updateProfile,
 } from "firebase/auth";
 
+import { db } from "@/lib/firebase-config";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+
 
 const AuthContext = createContext(null);
 
@@ -108,18 +111,31 @@ export default function AuthProvider({ children }) {
     }
   };
 
-  const register = async ({ email, password, displayName }) => {
+  const register = async ({ email, password, username }) => {
     setAuthLoading(true);
     setError(null);
     try {
       const e = normalizeEmail(email);
+
+      // 1) Create account in Firebase Auth
       const cred = await createUserWithEmailAndPassword(auth, e, password);
 
-      if (displayName && displayName.trim()) {
-        await updateProfile(cred.user, { displayName: displayName.trim() });
-      }
+      // 2) Create Firestore user document (UID as doc id)
+      const uid = cred.user.uid;
 
-      // Optional session cookie
+      await setDoc(doc(db, "Users", uid), {
+        uid,
+        email: e,
+        username: (username || "").trim() || e.split("@")[0],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+
+        // contoh field tambahan
+        role: "user",
+        photoURL: cred.user.photoURL || null,
+      });
+
+      // optional: kalau lu punya session cookie
       const token = await cred.user.getIdToken();
       await createSession(token);
     } catch (err) {
@@ -128,7 +144,7 @@ export default function AuthProvider({ children }) {
       throw err;
     } finally {
       setAuthLoading(false);
-    }
+      }
   };
 
   const logout = async () => {

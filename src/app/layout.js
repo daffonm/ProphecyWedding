@@ -1,5 +1,6 @@
 import "./globals.css";
 import AuthProvider from "../context/AuthContext";
+import DbProvider from "@/context/DbContext";
 
 export const metadata = {
   title: "Create Next App",
@@ -16,7 +17,9 @@ export default function RootLayout({ children }) {
       </head>
       <body className="">
         <AuthProvider>
-          {children}
+          <DbProvider>
+            {children}
+          </DbProvider>
         </AuthProvider>
       </body>
     </html>
