@@ -341,6 +341,16 @@ export default function BookingPage() {
     return user ? `booking_draft_${user.uid}` : null;
   }, [user]);
 
+
+  useEffect(() => {
+    if (authReadyLoading) return;
+    if (user) return;
+
+    // originPath sebaiknya pakai current path (biar kalau booking ada query tetap kebawa)
+    navigateWithOrigin(router, "/login");
+  }, [authReadyLoading, user, router]);
+
+
   // ---- Core helpers
   const updateBooking = async (partial, idOverride) => {
     if (!user) throw new Error("NOT_LOGGED_IN");
@@ -379,6 +389,7 @@ export default function BookingPage() {
       bookingCompleted: false,
       bookingConfirmedByAdmin: false,
       bookingPhase: 1,
+      bookingStatus: "Pending",
 
       customer_info: {
         name: "",
@@ -434,6 +445,7 @@ export default function BookingPage() {
 
   // ---- Resume on refresh (listen to draft doc)
   useEffect(() => {
+    if (authReadyLoading) return;
     if (!user || !draftKey) return;
 
     const stored = localStorage.getItem(draftKey);
@@ -561,14 +573,9 @@ export default function BookingPage() {
   };
 
   // Guards
-    if (authReadyLoading) {
-        return <div className="container mx-auto p-6 max-w-lg">Loading...</div>;   
-    }
+    if (authReadyLoading) return <div className="container mx-auto p-6 max-w-lg">Loading...</div>; 
+    if (!user) return null;
 
-    if (!user) {
-        navigateWithOrigin(router, "/login", "/booking");
-        return null;
-    }
 
 
   // =========================

@@ -1,4 +1,3 @@
-import { useRouter } from "next/router";
 
 export function getCurrentPath() {
   if (typeof window === "undefined") return "/";

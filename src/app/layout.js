@@ -1,4 +1,6 @@
 import "./globals.css";
+import "../styles/component.css";
+import "../styles/animation.css";
 import AuthProvider from "../context/AuthContext";
 import DbProvider from "@/context/DbContext";
 
