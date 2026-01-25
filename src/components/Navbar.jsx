@@ -3,15 +3,23 @@
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
-export default function Navbar({links}) {
+export default function Navbar() {
 
     const { user, loading, logout} = useAuth();
 
-    return <nav className="bg-white shadow-md py-4 px-6">
+    const navLinks = [
+    { name: 'Home', href: '/' },
+    { name: 'About Us', href: '#' },
+    { name: 'Packages', href: '/packagelisting' },
+    { name: 'Vendors', href: '#' },
+    { name: 'Contact', href: '#' },
+  ];
+
+    return <nav className="bg-white shadow-md py-4 px-6 absolute w-full z-10">
         <div className="container mx-auto flex justify-between items-center">
             <h1 className="text-xl font-bold">Prophecy Wedding</h1>
             <ul className="flex space-x-6">
-                {links.map((link, index) => (
+                {navLinks.map((link, index) => (
                     <li key={index}>
                         <Link href={link.href} className="hover:text-gray-700">{link.name}</Link>
                     </li>
