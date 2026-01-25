@@ -131,7 +131,7 @@ export default function AuthProvider({ children }) {
         updatedAt: serverTimestamp(),
 
         // contoh field tambahan
-        role: "user",
+        role: "customer",
         photoURL: cred.user.photoURL || null,
       });
 

@@ -1,16 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useRouter } from "next/navigation";
+
+import { useRouter, useSearchParams } from "next/navigation";
+import { getOriginFromSearchParams } from "@/utils/navigation";
 
 
 export default function Login() {
+
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const nextPath = getOriginFromSearchParams(searchParams);
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const { login, logout } = useAuth();
-    const router = useRouter();
+    const { user, login, logout, loading } = useAuth();
+
+    // Auto redirect kalau sudah login
+    useEffect(() => {
+        if (!loading) return;
+        if (user) {
+            // kalau sudah login
+            router.replace(nextPath || "/");
+        }
+    }, [loading, loading, router, nextPath]);
 
     const handleLogin = async () => {
         try {
