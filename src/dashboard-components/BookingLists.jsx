@@ -1,0 +1,230 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Image from "next/image";
+
+const STATUS = ["All Bookings", "Pending", "Accepted", "On Project", "Cancelled"];
+const MODES = ["List", "Calendar"];
+
+
+function StatusPill({ status }) {
+    const pills = [
+        { name: "Pending", color: "bg-yellow-500/80 text-yellow-100", desc : "Menunggu Konfirmasi"},
+        { name: "Accepted", color: "bg-emerald-500/80 text-emerald-100", desc : "Booking diterima"},
+        { name: "On Project", color: "bg-blue-500/80 text-blue-100", desc : "Booking sedang diproses"},
+        { name: "Cancelled", color: "bg-red-500/80 text-red-100", desc : "Booking dibatalkan"},
+    ]
+  const base = "px-2 py-1 rounded-full text-xs";
+  if (status === "Pending") return <span className={`${base} bg-yellow-500/80 text-yellow-100`}>Pending</span>;
+  if (status === "Accepted") return <span className={`${base} bg-emerald-500/80 text-emerald-100`}>Accepted</span>;
+  if (status === "On Project") return <span className={`${base} bg-blue-500/80 text-blue-100`}>On Project</span>;
+  if (status === "Cancelled") return <span className={`${base} bg-red-500/80 text-red-100`}>Cancelled</span>;
+  return <span className={`${base} bg-slate-500/20 text-slate-200`}>{status || "-"}</span>;
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  return String(value);
+}
+
+function formatTimestamp(ts) {
+  try {
+    if (!ts) return "-";
+    if (typeof ts?.toDate === "function") return ts.toDate().toLocaleString();
+    return String(ts);
+  } catch {
+    return "-";
+  }
+}
+
+function ListItem ({ b , handleSelect}) {
+
+    const name = b.customer_info?.name || "-";
+    const phone = b.customer_info?.phone || "-";
+    const venue = b.location_date_info?.venue || "-";
+    const date = formatDate(b.location_date_info?.date);
+    const pkg = b.package_info?.packageList || "-";
+
+    return (
+        <button className="flex flex-row items-center gap-4 p-2 rounded-xl glassmorphism-pop w-full" onClick={handleSelect}>
+            <div className="flex flex-col items-baseline justify-start w-20 overflow-clip">
+                <p className="text-xs">Booking ID</p>
+                <p>{b.id}</p>
+            </div>
+            <div className="flex flex-col items-baseline justify-start w-14">
+                <p className="text-xs">Name</p>
+                <p>{name}</p>
+            </div>
+            <div className="flex flex-col items-baseline justify-start w-24 overflow-hidden">
+                <p className="text-xs">Date</p>
+                <p>{date}</p>
+            </div>
+            <div className="flex flex-col items-baseline justify-start w-20 h-full">
+                <p className="text-xs">Status</p>
+                <StatusPill status={b.bookingStatus} />
+            </div>
+            <div className="flex flex-col items-baseline justify-start">
+                <p>{formatTimestamp(b.createdAt)}</p>
+            </div>
+            {/* <div>
+                <Image src="icons/icons8-right.svg" width={10} height={10} alt="arrow-right" />
+            </div> */}
+        </button>
+    )
+}
+
+export default function BookingLists({
+  bookings = [],
+  loading = false,
+  error = null,
+  onSelectBooking,
+}) {
+  const [activeStatus, setActiveStatus] = useState("All Bookings");
+  const [activeMode, setActiveMode] = useState("List");
+
+
+  /**
+   * STEP 1
+   * Hanya booking yang SUDAH completed (draft selesai)
+   */
+  const completedBookings = useMemo(() => {
+    return bookings.filter((b) => b.bookingCompleted === true);
+  }, [bookings]);
+
+  /**
+   * STEP 2
+   * Filter berdasarkan status
+   */
+  const filteredBookings = useMemo(() => {
+    if (activeStatus === "All Bookings") return completedBookings;
+    return completedBookings.filter(
+      (b) => (b.bookingStatus || "") === activeStatus
+    );
+  }, [completedBookings, activeStatus]);
+
+  return (
+    <div className="mt-6 flex flex-row justify-between">
+        {/* Left Display */}
+        <div className="w-150">
+      {/* FILTERs */}
+      <div className="flex flex-row gap-4">
+        {/* Status Filter */}
+        <div className="flex flex-wrap mb-4 glassmorphism-pop shadow-dark w-fit rounded-xl">
+            {STATUS.map((s) => (
+            <button
+                key={s}
+                className={`px-4 py-2 rounded-xl text-xs ${
+                activeStatus === s ? "bg-emerald-500 text-white" : ""
+                }`}
+                onClick={() => setActiveStatus(s)}
+            >
+                {s}
+            </button>
+            ))}
+        </div>
+        {/* List or Calender View */}
+        <div className="flex flex-wrap mb-4 glassmorphism-pop shadow-dark w-fit rounded-xl">
+            {MODES.map((m) => (
+                <button
+                key={m}
+                className={`px-4 py-2 rounded-xl text-xs ${
+                    activeMode === m ? "bg-emerald-500 text-white" : ""
+                }`}
+                onClick={() => setActiveMode(m)}
+                >
+                {m}
+                </button>
+            )
+            )}
+        </div>
+        
+
+      </div>
+
+      {/* List */}
+      <div className="w-full overflow-x-auto">
+        {loading && (
+          <div className="text-sm opacity-80">
+            Memuat booking yang sudah disubmit...
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="text-sm text-red-300">
+            Gagal memuat data: {String(error?.message || error)}
+          </div>
+        )}
+
+        {!loading && !error && filteredBookings.length === 0 && (
+          <div className="text-sm opacity-80">
+            Tidak ada booking completed dengan status: {activeStatus}
+          </div>
+        )}
+
+        {!loading && !error && filteredBookings.length > 0 && (
+            filteredBookings.map((b) => (
+                <ListItem key={b.id} b={b} />
+            ))
+        )}
+      </div>
+        </div>
+
+        {/* Right Display */}
+        <div className="w-110 glassmorphism-pop rounded-xl">
+            <div>
+                <h2 className="text-xl">Booking Information</h2>
+            </div>
+        </div>
+    </div>
+  );
+}
+
+        {/* //   <table className="min-w-1100px w-full text-sm">
+        //     <thead className="text-left opacity-80">
+        //       <tr>
+        //         <th className="py-2">ID</th>
+        //         <th className="py-2">Nama</th>
+        //         <th className="py-2">Telepon</th>
+        //         <th className="py-2">Venue</th>
+        //         <th className="py-2">Tanggal</th>
+        //         <th className="py-2">Paket</th>
+        //         <th className="py-2">Status</th>
+        //         <th className="py-2">Created</th>
+        //       </tr>
+        //     </thead>
+
+        //     <tbody>
+        //       {filteredBookings.map((b) => {
+        //         const name = b.customer_info?.name || "-";
+        //         const phone = b.customer_info?.phone || "-";
+        //         const venue = b.location_date_info?.venue || "-";
+        //         const date = formatDate(b.location_date_info?.date);
+        //         const pkg = b.package_info?.packageList || "-";
+
+        //         return (
+        //           <tr
+        //             key={b.id}
+        //             className={`border-t border-white/10 ${
+        //               onSelectBooking
+        //                 ? "cursor-pointer hover:bg-white/5"
+        //                 : ""
+        //             }`}
+        //             onClick={() => onSelectBooking?.(b)}
+        //           >
+        //             <td className="py-3">{b.id}</td>
+        //             <td className="py-3">{name}</td>
+        //             <td className="py-3">{phone}</td>
+        //             <td className="py-3">{venue}</td>
+        //             <td className="py-3">{date}</td>
+        //             <td className="py-3">{pkg}</td>
+        //             <td className="py-3">
+        //               <StatusPill status={b.bookingStatus} />
+        //             </td>
+        //             <td className="py-3">
+        //               {formatTimestamp(b.createdAt)}
+        //             </td>
+        //           </tr>
+        //         );
+        //       })}
+        //     </tbody>
+        //   </table> */}

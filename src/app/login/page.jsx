@@ -17,15 +17,24 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const { user, login, logout, loading } = useAuth();
+    const { user, login, logout, loading, role, profileLoading } = useAuth();
 
     // Auto redirect kalau sudah login
     useEffect(() => {
         if (loading) return;
         if (!user) return; // kalau blm login, jangan redirect
+        if (profileLoading) return; // tunggu sampai profile tidak loading
+
+        if (role === "admin") {
+            console.log("Redirecting to admin dashboard");
+
+            router.push("/admin-dashboard");
+            return;
+        }
+        console.log("Redirecting to:", nextPath || "/");
         router.replace(nextPath || "/"); // redirect ke nextPath atau home
         
-    }, [user, loading, router, nextPath]);
+    }, [user, loading, router, nextPath, profileLoading, role]);
 
     const handleLogin = async () => {
         try {

@@ -11,7 +11,7 @@ import {
 } from "firebase/auth";
 
 import { db } from "@/lib/firebase-config";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 
 
 const AuthContext = createContext(null);
@@ -51,6 +51,14 @@ export default function AuthProvider({ children }) {
   // authLoading: sedang proses login/register/logout
   const [authLoading, setAuthLoading] = useState(false);
 
+  // NEW, profile / role loading
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  // NEW: user profile + doc
+  const [userDoc, setUserDoc] = useState(null);
+  const [role, setRole] = useState(null);
+
+
   const [error, setError] = useState(null);
 
   const clearError = () => setError(null);
@@ -84,9 +92,33 @@ export default function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setLoading(false);
+
+
+      if (!u) {        // logged out
+        setUserDoc(null);
+        setRole(null);
+        return;
+      }
+
+      // Ambil Role dari Firestore
+      setProfileLoading(true);
+      // Fetch user document from Firestore
+      try {
+        const snap = await getDoc(doc(db, "Users", u.uid));
+        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+        setUserDoc(data);
+        setRole(data?.role ?? null);
+      } catch (err) {
+        console.error("FETCH USER DOC ERROR:", err);
+        setUserDoc(null);
+        setRole(null);
+      } finally {
+        setProfileLoading(false);
+      }
+
     });
 
     return () => unsub();
@@ -167,13 +199,16 @@ export default function AuthProvider({ children }) {
       user,
       loading,
       authLoading,
+      profileLoading,
+      userDoc,
+      role,
       error,
       login,
       register,
       logout,
       clearError,
     }),
-    [user, loading, authLoading, error]
+    [user, loading, authLoading, profileLoading, userDoc, role, error]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
