@@ -2,25 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import BookingInformation from "./BookingInformation";
+import StatusPill from "@/components/StatusPill";
 
 const STATUS = ["All Bookings", "Pending", "Accepted", "On Project", "Cancelled"];
 const MODES = ["List", "Calendar"];
 
 
-function StatusPill({ status }) {
-    const pills = [
-        { name: "Pending", color: "bg-yellow-500/80 text-yellow-100", desc : "Menunggu Konfirmasi"},
-        { name: "Accepted", color: "bg-emerald-500/80 text-emerald-100", desc : "Booking diterima"},
-        { name: "On Project", color: "bg-blue-500/80 text-blue-100", desc : "Booking sedang diproses"},
-        { name: "Cancelled", color: "bg-red-500/80 text-red-100", desc : "Booking dibatalkan"},
-    ]
-  const base = "px-2 py-1 rounded-full text-xs";
-  if (status === "Pending") return <span className={`${base} bg-yellow-500/80 text-yellow-100`}>Pending</span>;
-  if (status === "Accepted") return <span className={`${base} bg-emerald-500/80 text-emerald-100`}>Accepted</span>;
-  if (status === "On Project") return <span className={`${base} bg-blue-500/80 text-blue-100`}>On Project</span>;
-  if (status === "Cancelled") return <span className={`${base} bg-red-500/80 text-red-100`}>Cancelled</span>;
-  return <span className={`${base} bg-slate-500/20 text-slate-200`}>{status || "-"}</span>;
-}
 
 function formatDate(value) {
   if (!value) return "-";
@@ -37,7 +25,7 @@ function formatTimestamp(ts) {
   }
 }
 
-function ListItem ({ b , handleSelect}) {
+function ListItem ({ b , handleSelect, selected}) {
 
     const name = b.customer_info?.name || "-";
     const phone = b.customer_info?.phone || "-";
@@ -46,7 +34,7 @@ function ListItem ({ b , handleSelect}) {
     const pkg = b.package_info?.packageList || "-";
 
     return (
-        <button className="flex flex-row items-center gap-4 p-2 rounded-xl glassmorphism-pop w-full" onClick={handleSelect}>
+        <button className="flex flex-row items-center gap-4 p-2 rounded-xl glassmorphism-pop w-full" onClick={() => handleSelect(b.id)}>
             <div className="flex flex-col items-baseline justify-start w-20 overflow-clip">
                 <p className="text-xs">Booking ID</p>
                 <p>{b.id}</p>
@@ -75,9 +63,9 @@ function ListItem ({ b , handleSelect}) {
 
 export default function BookingLists({
   bookings = [],
+  usersById = {},
   loading = false,
   error = null,
-  onSelectBooking,
 }) {
   const [activeStatus, setActiveStatus] = useState("All Bookings");
   const [activeMode, setActiveMode] = useState("List");
@@ -102,8 +90,21 @@ export default function BookingLists({
     );
   }, [completedBookings, activeStatus]);
 
+  
+  const [selectedBooking, setSelectedBooking] = useState(null);
+
+  const handleSelectBooking = (id) => {
+    setSelectedBooking(id);
+  };
+  const findBookingById = (id) => {
+    return bookings.find((b) => b.id === id);
+  };
+
+
+
+
   return (
-    <div className="mt-6 flex flex-row justify-between">
+    <div className="mt-6 flex flex-row justify-between h-132">
         {/* Left Display */}
         <div className="w-150">
       {/* FILTERs */}
@@ -163,18 +164,14 @@ export default function BookingLists({
 
         {!loading && !error && filteredBookings.length > 0 && (
             filteredBookings.map((b) => (
-                <ListItem key={b.id} b={b} />
+                <ListItem key={b.id} b={b} handleSelect={handleSelectBooking} selected={selectedBooking === b.id} />
             ))
         )}
       </div>
         </div>
 
         {/* Right Display */}
-        <div className="w-110 glassmorphism-pop rounded-xl">
-            <div>
-                <h2 className="text-xl">Booking Information</h2>
-            </div>
-        </div>
+        { selectedBooking && <BookingInformation b={findBookingById(selectedBooking)} u={usersById?.[findBookingById(selectedBooking)?.customer_id]} /> }
     </div>
   );
 }
