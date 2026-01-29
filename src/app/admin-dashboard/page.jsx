@@ -1,7 +1,7 @@
 // /mnt/data/page.jsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 
 import SideMenu from "@/dashboard-components/SideMenu";
 import BookingLists from "@/dashboard-components/BookingLists";
@@ -12,7 +12,7 @@ import { useCollection } from "@/hooks/useCollection";
 import { useUsersByIds } from "@/hooks/useUsersByIds";
 
 export default function AdminDashboard() {
-  const { colRef, query, orderBy } = useDb();
+  const { db, colRef, query, orderBy, serverTimestamp, updateDoc } = useDb();
 
   const bookingQuery = useMemo(() => {
     return () => query(colRef("Bookings"), orderBy("createdAt", "desc"));
@@ -46,9 +46,9 @@ export default function AdminDashboard() {
 
     try {
     //  updateDoc(collection, id, data)
-      await db.updateDoc("Bookings", bookingId, {
+      await updateDoc("Bookings", bookingId, {
         ...patch,
-        updatedAt: db.serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
     } catch (e) {
@@ -64,35 +64,34 @@ export default function AdminDashboard() {
     await patchBooking(bookingId, {
       bookingConfirmedByAdmin: true,
       bookingStatus: "Accepted",
-      confirmedAt: db.serverTimestamp(),
-      handledBy: adminUid,
+      confirmedAt: serverTimestamp(),
+  
     });
-  }, [patchBooking, db, adminUid]);
+  }, [patchBooking, db]);
 
   const rejectBooking = useCallback(async (bookingId, reason = "") => {
     await patchBooking(bookingId, {
       bookingConfirmedByAdmin: false,
       bookingStatus: "Rejected",
-      rejectedAt: db.serverTimestamp(),
+      rejectedAt: serverTimestamp(),
       rejectReason: String(reason || "").trim(),
-      handledBy: adminUid,
+   
     });
-  }, [patchBooking, db, adminUid]);
+  }, [patchBooking, db]);
 
   const markInProgress = useCallback(async (bookingId) => {
     await patchBooking(bookingId, {
       bookingStatus: "In Progress",
-      handledBy: adminUid,
+   
     });
-  }, [patchBooking, adminUid]);
+  }, [patchBooking]);
 
   const markDone = useCallback(async (bookingId) => {
     await patchBooking(bookingId, {
       bookingStatus: "Completed",
-      doneAt: db.serverTimestamp(),
-      handledBy: adminUid,
+     
     });
-  }, [patchBooking, db, adminUid]);
+  }, [patchBooking, db]);
 
 
   // ====== Side Menus ====== 
@@ -112,7 +111,7 @@ export default function AdminDashboard() {
             markInProgress,
             markDone,
             loadingById: actionLoadingById,
-            error: actionError,
+            actionError,
           }
         },
         sub: [

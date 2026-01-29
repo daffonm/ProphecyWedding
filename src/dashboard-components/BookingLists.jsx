@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+
+import Overlay from "@/components/Overlay";
 import BookingInformation from "./BookingInformation";
 import StatusPill from "@/components/StatusPill";
 
@@ -9,7 +11,7 @@ const STATUS = ["All Bookings", "Pending", "Accepted", "On Project", "Cancelled"
 const MODES = ["List", "Calendar"];
 
 
-
+//  Helpers
 function formatDate(value) {
   if (!value) return "-";
   return String(value);
@@ -34,7 +36,8 @@ function ListItem ({ b , handleSelect, selected}) {
     const pkg = b.package_info?.packageList || "-";
 
     return (
-        <button className="flex flex-row items-center gap-4 p-2 rounded-xl glassmorphism-pop w-full" onClick={() => handleSelect(b.id)}>
+        <button className="flex flex-row items-center gap-4 p-2 rounded-xl glassmorphism-pop w-full h-16 overflow-hidden" 
+        onClick={() => handleSelect(b.id)}>
             <div className="flex flex-col items-baseline justify-start w-20 overflow-clip">
                 <p className="text-xs">Booking ID</p>
                 <p>{b.id}</p>
@@ -61,21 +64,39 @@ function ListItem ({ b , handleSelect, selected}) {
     )
 }
 
+// Pop Up Components
+function RejectConfirmation ({onClose, getInput, onConfirm}) {
+  return (
+    <div>
+      <div>
+        <h2>Reject This Booking?</h2>
+      </div>
+      <div>
+        <input type="text" name="reason" id="1" onChange={(e) => getInput(e.target.value)}/>
+        <div>
+          <button onClick={onClose}>Cancel</button>
+          <button onClick={onConfirm}>Confirm</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function BookingLists({
   bookings = [],
   usersById = {},
   loading = false,
   error = null,
+  action
 }) {
   const [activeStatus, setActiveStatus] = useState("All Bookings");
   const [activeMode, setActiveMode] = useState("List");
 
-
   /**
    * STEP 1
    * Hanya booking yang SUDAH completed (draft selesai)
-   */
-  const completedBookings = useMemo(() => {
+  */
+ const completedBookings = useMemo(() => {
     return bookings.filter((b) => b.bookingCompleted === true);
   }, [bookings]);
 
@@ -89,10 +110,10 @@ export default function BookingLists({
       (b) => (b.bookingStatus || "") === activeStatus
     );
   }, [completedBookings, activeStatus]);
-
+  
   
   const [selectedBooking, setSelectedBooking] = useState(null);
-
+  
   const handleSelectBooking = (id) => {
     setSelectedBooking(id);
   };
@@ -100,7 +121,24 @@ export default function BookingLists({
     return bookings.find((b) => b.id === id);
   };
 
+  // Pop Ups
+  const [togglePopUp, setTogglePopUp] = useState("")
+  const [popUpProps, setPopUpProps] = useState({})
+  const [rejectInput, setRejectInput] = useState("")
+  const popUps = [
+    { name: "RejectConfirmation", 
+      component : RejectConfirmation, 
+      props : { 
+        onClose : () => setTogglePopUp(""),
+        getInput : setRejectInput,
+        onConfirm : () => {
+          action.rejectBooking(selectedBooking, rejectInput)
+          setTogglePopUp("")
+        }
+      }}
+  ]
 
+  const ActivePopUp = popUps.find((p) => p.name === togglePopUp)
 
 
   return (
@@ -143,7 +181,7 @@ export default function BookingLists({
       </div>
 
       {/* List */}
-      <div className="w-full overflow-x-auto">
+      <div className="w-full overflow-x-auto flex flex-col gap-4 overflow-y-scroll">
         {loading && (
           <div className="text-sm opacity-80">
             Memuat booking yang sudah disubmit...
@@ -171,7 +209,24 @@ export default function BookingLists({
         </div>
 
         {/* Right Display */}
-        { selectedBooking && <BookingInformation b={findBookingById(selectedBooking)} u={usersById?.[findBookingById(selectedBooking)?.customer_id]} /> }
+        { selectedBooking && 
+        <BookingInformation
+         b={findBookingById(selectedBooking)}
+         u={usersById?.[findBookingById(selectedBooking)?.customer_id]}
+         setTogglePopUp = {setTogglePopUp}
+         /> }
+
+        {/* overlay */}
+        { togglePopUp && 
+        <Overlay
+        isOpen={togglePopUp}
+        onClose={() => setTogglePopUp("")}
+        contentClassName="absolute top-0 right-0 h-screen bg-white shadow-xl p-4"
+        >
+            {/* { popUps.find((p) => p.name === togglePopUp)?.component(popUpProps) } */}
+            { ActivePopUp && <ActivePopUp.component {...ActivePopUp.props} />}
+        </Overlay>
+        }
     </div>
   );
 }

@@ -16,7 +16,7 @@ function formatTimestamp(ts) {
 }
 
 
-export default function BookingInformation ({b, u}) {
+export default function BookingInformation ({b, u, setTogglePopUp}) {
 
     const name = b.customer_info?.name || "-";
     const phone = b.customer_info?.phone || "-";
@@ -177,7 +177,10 @@ export default function BookingInformation ({b, u}) {
                 { b.bookingStatus === "Pending" && (
                     <div className="flex flex-col w-full gap-4">
                         <button className="bg-emerald-500 text-white px-4 py-2 rounded">Accept & Reserve Date</button>
-                        <button className="bg-white text-red-500 border border-red-500 px-4 py-2 rounded">Reject This Booking</button>
+                        <button className="bg-white text-red-500 border border-red-500 px-4 py-2 rounded"
+                        onClick={() => setTogglePopUp("RejectConfirmation")}
+                        >
+                        Reject This Booking</button>
                     </div>
                 )}
             </div>

@@ -78,7 +78,32 @@ button {
 .button1:hover {
   background-color: var(--font-heading-clr);
   color: white;
-  transition: .5s;
+  transition: .3s;
+}
+
+.button2 {
+  background-color: var(--font-heading-clr);
+  color: white;
+  border: 1px solid var(--font-heading-clr);
+  padding: 5px 20px;
+}
+.button2:hover {
+  background-color: white;
+  color: var(--font-heading-clr);
+  transition: .3s;
+}
+.button2-inactive {
+  cursor: default;
+  background-color: white;
+  color: var(--font-heading-clr);
+  border: 1px solid var(--font-heading-clr);
+  padding: 5px 20px;
+}
+.button-grayed {
+  cursor:default;
+  background-color: rgba(128, 128, 128, 0.536);
+  color: white;
+  padding: 5px 20px;
 }
 
 .gradient-1 {
@@ -96,6 +121,14 @@ background: linear-gradient(to right, #11FFBD, #AAFFA9); /* W3C, IE 10+/ Edge, F
 
 .shadow-dark {
   box-shadow: rgba(50, 50, 93, 0.25) 0px 10px 10px -52px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;
+}
+
+.bd-2 {
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
+}
+
+.bd-3 {
+  box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
 }
 
 .glassmorphism {

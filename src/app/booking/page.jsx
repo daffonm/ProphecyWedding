@@ -4,9 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext"; // sesuaikan path kamu
 import { useDb } from "@/context/DbContext";     // sesuaikan path kamu
+import { useCollection } from "@/hooks/useCollection";
 
 
 import { navigateWithOrigin } from "@/utils/navigation";
+
+import PackagePhase from "@/components/PackagePhase";
+import LocationDatePhase from "@/components/LocationDatePhase";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
+
+// Utils
+import { formatRupiah } from "@/utils/format";
+import { where } from "firebase/firestore";
+
 // =========================
 // Helpers (di file yang sama)
 // =========================
@@ -23,120 +33,6 @@ function toNumber(v) {
 // Phase Components
 // =========================
 
-function PackagePhase({ packageList, setPackageList, onNext, error }) {
-  const validate = () => {
-    if (!safeTrim(packageList)) return "Pilih package dulu.";
-    return "";
-  };
-
-  const handleNext = async () => {
-    const msg = validate();
-    if (msg) return onNext({ ok: false, message: msg });
-    await onNext({ ok: true });
-  };
-
-  return (
-    <div className="space-y-3">
-      <h2 className="text-xl font-semibold">Choose a Package</h2>
-
-      {error ? <div className="text-red-600">{error}</div> : null}
-
-      <div className="space-y-1">
-        <label className="block text-sm">Package</label>
-        <select
-          className="border p-2 w-full"
-          value={packageList}
-          onChange={(e) => setPackageList(e.target.value)}
-        >
-          <option value="basic">Basic Package</option>
-          <option value="standard">Standard Package</option>
-          <option value="premium">Premium Package</option>
-        </select>
-      </div>
-
-      <button className="border px-4 py-2" onClick={handleNext}>
-        Next
-      </button>
-    </div>
-  );
-}
-
-function LocationDatePhase({
-  venue,
-  setVenue,
-  guestCount,
-  setGuestCount,
-  weddingDate,
-  setWeddingDate,
-  onBack,
-  onNext,
-  error,
-}) {
-  const validate = () => {
-    if (!safeTrim(venue)) return "Venue wajib dipilih.";
-    if (!safeTrim(weddingDate)) return "Tanggal wajib diisi.";
-    if (toNumber(guestCount) <= 0) return "Guest count harus lebih dari 0.";
-    return "";
-  };
-
-  const handleNext = async () => {
-    const msg = validate();
-    if (msg) return onNext({ ok: false, message: msg });
-    await onNext({ ok: true });
-  };
-
-  return (
-    <div className="space-y-3">
-      <h2 className="text-xl font-semibold">Location & Date</h2>
-
-      {error ? <div className="text-red-600">{error}</div> : null}
-
-      <div className="space-y-1">
-        <label className="block text-sm">Venue</label>
-        <select
-          className="border p-2 w-full"
-          value={venue}
-          onChange={(e) => setVenue(e.target.value)}
-        >
-          <option value="">-- pilih --</option>
-          <option value="venueA">Venue A</option>
-          <option value="venueB">Venue B</option>
-          <option value="venueC">Venue C</option>
-        </select>
-      </div>
-
-      <div className="space-y-1">
-        <label className="block text-sm">Guest Count</label>
-        <input
-          className="border p-2 w-full"
-          type="number"
-          value={guestCount}
-          onChange={(e) => setGuestCount(e.target.value)}
-          placeholder="e.g. 200"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className="block text-sm">Wedding Date</label>
-        <input
-          className="border p-2 w-full"
-          type="date"
-          value={weddingDate}
-          onChange={(e) => setWeddingDate(e.target.value)}
-        />
-      </div>
-
-      <div className="flex gap-2">
-        <button className="border px-4 py-2" onClick={onBack}>
-          Back
-        </button>
-        <button className="border px-4 py-2" onClick={handleNext}>
-          Next
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function CustomerInfoPhase({
   name,
@@ -316,14 +212,28 @@ export default function BookingPage() {
   const router = useRouter();
   const { user, loading: authReadyLoading } = useAuth();
 
-  const db = useDb();
+  // Db Fetch
+  // PACKAGE
+  const {db, colRef, query, orderBy, serverTimestamp, addDoc, setDoc, listenDoc} = useDb();
+  const packageQuery = useMemo(() => {
+      return () => query(colRef("Packages"), orderBy("order_value", "asc"));
+    }, [colRef, orderBy, query]);
+  
+  const {
+    rows: packages,
+    loading: packagesLoading,
+    error: packagesError,
+  } = useCollection(packageQuery, [], { enabled: true });
+  const pkg_default_value = packages.find((p) => p.code === "STANDART")?.name || "Standart";
+  
+
 
   const [bookingId, setBookingId] = useState(null);
   const [bookingPhase, setBookingPhase] = useState(1);
   const [error, setError] = useState("");
 
   // Phase fields
-  const [packageList, setPackageList] = useState("basic");
+  const [packageList, setPackageList] = useState(pkg_default_value);
 
   const [venue, setVenue] = useState("");
   const [guestCount, setGuestCount] = useState("");
@@ -358,10 +268,10 @@ export default function BookingPage() {
     const id = idOverride || bookingId;
     if (!id) throw new Error("NO_BOOKING_ID");
 
-    await db.setDoc(
+    await setDoc(
         "Bookings",
         id,
-        { ...partial, updatedAt: db.serverTimestamp() },
+        { ...partial, updatedAt: serverTimestamp() },
         { merge: true }
     );
     };
@@ -384,7 +294,7 @@ export default function BookingPage() {
     }
 
     // create new draft
-    const ref = await db.addDoc("Bookings", {
+    const ref = await addDoc("Bookings", {
       customer_id: user.uid,
       bookingCompleted: false,
       bookingConfirmedByAdmin: false,
@@ -410,8 +320,8 @@ export default function BookingPage() {
         packageList: packageList || "basic",
       },
 
-      createdAt: db.serverTimestamp(),
-      updatedAt: db.serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
 
     setBookingId(ref.id);
@@ -424,7 +334,7 @@ export default function BookingPage() {
     setBookingPhase(1);
     setError("");
 
-    setPackageList("basic");
+    setPackageList(pkg_default_value);
     setVenue("");
     setGuestCount("");
     setWeddingDate("");
@@ -451,7 +361,7 @@ export default function BookingPage() {
     const stored = localStorage.getItem(draftKey);
     if (!stored) return;
 
-    const unsub = db.listenDoc(
+    const unsub = listenDoc(
       "Bookings",
       stored,
       (snap) => {
@@ -473,7 +383,7 @@ export default function BookingPage() {
         setBookingId(snap.id);
         setBookingPhase(b.bookingPhase || 1);
 
-        setPackageList(b.package_info?.packageList || "basic");
+        setPackageList(b.package_info?.packageList || "Standart");
 
         setVenue(b.location_date_info?.venue || "");
         setGuestCount(String(b.location_date_info?.guestCount ?? ""));
@@ -498,24 +408,45 @@ export default function BookingPage() {
   // =========================
   // Phase save handlers (per phase)
   // =========================
-  const onPhase1Next = async ({ ok, message }) => {
-    if (!ok) return setError(message || "Phase 1 invalid.");
+  const onPhase1Next = async ({
+  ok,
+  message,
+  selectedPkgCode,
+  selectedPkgName,
+  isCustom,
+  checkedServiceCodes,
+}) => {
+  if (!ok) return setError(message || "Phase 1 invalid.");
 
-    setError("");
+  // Double safety validation (di parent juga)
+  if (isCustom) {
+    const codes = Array.isArray(checkedServiceCodes) ? checkedServiceCodes : [];
+    if (codes.length < 1) return setError("Custom package wajib pilih minimal 1 service.");
+  }
 
-    const id = await createDraftIfNeeded(); // penting: simpan id dari sini
-    if (!id) return;
+  setError("");
 
-    await updateBooking(
-        {
-        bookingPhase: 2,
-        package_info: { packageList },
-        },
-        id
-    );
+  const id = await createDraftIfNeeded(); // simpan id dari sini
+  if (!id) return;
 
-    setBookingPhase(2);
-    };
+  await updateBooking(
+    {
+      bookingPhase: 2,
+      package_info: {
+        packageList, // tetap pakai state yang kamu set di PackagePhase saat select
+        packageCode: selectedPkgCode || "",
+        isCustom: Boolean(isCustom),
+        selected_services: Array.isArray(checkedServiceCodes) ? checkedServiceCodes : [],
+        // optional (kalau kamu mau simpan display name terpisah)
+        packageName: selectedPkgName || packageList || "",
+      },
+    },
+    id
+  );
+
+  setBookingPhase(2);
+};
+
 
 
   const onPhase2Next = async ({ ok, message }) => {
@@ -573,7 +504,7 @@ export default function BookingPage() {
   };
 
   // Guards
-    if (authReadyLoading) return <div className="container mx-auto p-6 max-w-lg">Loading...</div>; 
+    if (authReadyLoading) return <LoadingSkeleton />; 
     if (!user) return null;
 
 
@@ -582,64 +513,78 @@ export default function BookingPage() {
   // Render by phase
   // =========================
   return (
-    <div className="container mx-auto p-6 max-w-lg">
-      {bookingPhase === 1 && (
-        <PackagePhase
-          packageList={packageList}
-          setPackageList={setPackageList}
-          onNext={onPhase1Next}
-          error={error}
-        />
-      )}
+    <div className="flex flex-row">
+      <div className="
+      bg-[url(/web-images/booking-bg.jpg)]
+      bg-center
+      bg-linear-to-r from-green-200 to-green-900
+      bg-amber-200 h-screen w-120">
+      
+      </div>
+      {/* Form */}
+      <div className="container w-full h-screen p-8 overflow-hidden">
+        {bookingPhase === 1 && (
+          <PackagePhase
+            packages={packages}
+            packagesLoading={packagesLoading}
+            packagesError={packagesError}
+            packageList={packageList}
+            setPackageList={setPackageList}
+            onNext={onPhase1Next}
+            error={error}
+          />
+        )}
 
-      {bookingPhase === 2 && (
-        <LocationDatePhase
-          venue={venue}
-          setVenue={setVenue}
-          guestCount={guestCount}
-          setGuestCount={setGuestCount}
-          weddingDate={weddingDate}
-          setWeddingDate={setWeddingDate}
-          onBack={() => setBookingPhase(1)}
-          onNext={onPhase2Next}
-          error={error}
-        />
-      )}
+        {bookingPhase === 2 && (
+          <LocationDatePhase
+            venue={venue}
+            setVenue={setVenue}
+            guestCount={guestCount}
+            setGuestCount={setGuestCount}
+            weddingDate={weddingDate}
+            setWeddingDate={setWeddingDate}
+            onBack={() => setBookingPhase(1)}
+            onNext={onPhase2Next}
+            error={error}
+          />
+        )}
 
-      {bookingPhase === 3 && (
-        <CustomerInfoPhase
-          name={name}
-          setName={setName}
-          phone={phone}
-          setPhone={setPhone}
-          bridegroom={bridegroom}
-          setBridegroom={setBridegroom}
-          bride={bride}
-          setBride={setBride}
-          onBack={() => setBookingPhase(2)}
-          onNext={onPhase3Next}
-          error={error}
-        />
-      )}
+        {bookingPhase === 3 && (
+          <CustomerInfoPhase
+            name={name}
+            setName={setName}
+            phone={phone}
+            setPhone={setPhone}
+            bridegroom={bridegroom}
+            setBridegroom={setBridegroom}
+            bride={bride}
+            setBride={setBride}
+            onBack={() => setBookingPhase(2)}
+            onNext={onPhase3Next}
+            error={error}
+          />
+        )}
 
-      {bookingPhase === 4 && (
-        <PaymentPhase
-          paymentSystem={paymentSystem}
-          setPaymentSystem={setPaymentSystem}
-          paymentMethod={paymentMethod}
-          setPaymentMethod={setPaymentMethod}
-          onBack={() => setBookingPhase(3)}
-          onSubmit={onPhase4Submit}
-          error={error}
-        />
-      )}
+        {bookingPhase === 4 && (
+          <PaymentPhase
+            paymentSystem={paymentSystem}
+            setPaymentSystem={setPaymentSystem}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            onBack={() => setBookingPhase(3)}
+            onSubmit={onPhase4Submit}
+            error={error}
+          />
+        )}
 
-      {bookingPhase === 5 && (
-        <CompletedPhase
-          onGoHome={() => router.push("/")}
-          onMakeAnother={startNewBooking}
-        />
-      )}
+        {bookingPhase === 5 && (
+          <CompletedPhase
+            onGoHome={() => router.push("/")}
+            onMakeAnother={startNewBooking}
+          />
+        )}
+      </div>
+
     </div>
   );
 }
