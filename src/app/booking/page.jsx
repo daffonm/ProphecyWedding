@@ -238,6 +238,7 @@ export default function BookingPage() {
   const [venue, setVenue] = useState("");
   const [guestCount, setGuestCount] = useState("");
   const [weddingDate, setWeddingDate] = useState("");
+  const [weddingType, setWeddingType] = useState("")
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -543,6 +544,8 @@ export default function BookingPage() {
             setGuestCount={setGuestCount}
             weddingDate={weddingDate}
             setWeddingDate={setWeddingDate}
+            weddingType={weddingType}
+            setWeddingType={setWeddingType}
             onBack={() => setBookingPhase(1)}
             onNext={onPhase2Next}
             error={error}
