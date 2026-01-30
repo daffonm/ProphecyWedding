@@ -13,10 +13,12 @@ import { formatRupiah } from "@/utils/format";
 function safeTrim(v) {
   return String(v ?? "").trim();
 }
+
 function toNumber(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
+
 
 // Helper
 function limitCountByType(type, count) {
@@ -43,27 +45,24 @@ function limitCountByType(type, count) {
 function VenueBox({ v, selectedVenue, setVenue, normalizedGuest }) {
   const vid = v?.id ?? v?.docId ?? v?.uid ?? v?.name;
   const isSelected = String(selectedVenue || "") === String(vid || "");
-
   const capacity = toNumber(v?.capacity);
   const isAvailable = normalizedGuest <= capacity;
 
   return (
     <div
-      className={`border rounded-xl overflow-hidden bg-white h-110 flex flex-col justify-between ${
+      className={`border rounded-xl overflow-hidden bg-white flex flex-col justify-between ${
         isSelected ? "ring-2 ring-green-500" : ""
       }`}
     >
-      <div>
-        <div className="bg-gray-200 h-54 w-full" />
-        <div className="p-3 space-y-2">
-          <div>
-            <h2 className="font-semibold">{v?.name}</h2>
-            <p className="text-xs text-gray-600 h-8">{v?.address}</p>
-          </div>
-        </div>
-      </div>
+      {/* ImageBox placeholder */}
+      <div className="bg-gray-200 h-32 w-full" />
 
-      <div className="p-4 flex flex-col">
+      <div className="p-4 space-y-3">
+        <div className="space-y-1">
+          <h2 className="font-semibold">{v?.name}</h2>
+          <p className="text-xs text-gray-600 line-clamp-2">{v?.address}</p>
+        </div>
+
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[11px] text-gray-500">Base Price</p>
@@ -77,34 +76,35 @@ function VenueBox({ v, selectedVenue, setVenue, normalizedGuest }) {
         </div>
 
         <div className="text-xs text-gray-600">
-          Your Estimated Guests:{" "}
-          <span className="font-semibold">{normalizedGuest}</span>
-          {!isAvailable ? (
-            <span className="text-red-500"> (exceeds capacity)</span>
-          ) : (
-            <span className="text-green-600"> (available)</span>
-          )}
+          Your guests: <span className="font-semibold">{normalizedGuest}</span>
+          <span className={isAvailable ? "text-green-600" : "text-red-500"}>
+            {" "}
+            {isAvailable ? "(available)" : "(exceeds capacity)"}
+          </span>
         </div>
 
-        <div className="flex flex-row justify-cente mt-2">
-          <button
-            type="button"
-            className={`w-50 rounded-lg py-2 text-sm ${
-              isSelected ? "bg-green-600 text-white" : "bg-gray-900 text-white"
-            }`}
-            onClick={() => setVenue(String(vid || ""))}
-            disabled={!isAvailable}
-            title={!isAvailable ? "Guest exceeds venue capacity" : "Select this venue"}
-          >
-            {isSelected ? "Selected" : "Select Venue"}
-          </button>
-        </div>
+        <button
+          type="button"
+          className={`w-full rounded-lg py-2 text-sm ${
+            isSelected ? "bg-green-600 text-white" : "bg-gray-900 text-white"
+          }`}
+          onClick={() => setVenue(String(vid || ""))}
+          disabled={!isAvailable}
+          title={!isAvailable ? "Guest exceeds venue capacity" : "Select this venue"}
+        >
+          {isSelected ? "Selected" : "Select Venue"}
+        </button>
       </div>
     </div>
   );
 }
 
 export default function LocationDatePhase({
+
+  venueRows,
+  venuesLoading,
+  venuesError,
+
   venue,
   setVenue,
   guestCount,
@@ -116,18 +116,8 @@ export default function LocationDatePhase({
   onBack,
   onNext,
   error,
+
 }) {
-  const { colRef, query } = useDb();
-
-  const venueQuery = useMemo(() => {
-    return () => query(colRef("Venues"));
-  }, [colRef, query]);
-
-  const {
-    rows: venueRows,
-    loading: venuesLoading,
-    error: venuesError,
-  } = useCollection(venueQuery, [], { enabled: true });
 
   const [toggleDisplayVenue, setToggleDisplayVenue] = useState(false);
 
@@ -155,12 +145,17 @@ export default function LocationDatePhase({
     if (!safeTrim(weddingDate)) return "Event date is required.";
     if (toNumber(guestCount) <= 0) return "Guest count must be greater than 0.";
 
+    if (!toggleDisplayVenue) {
+      // user belum buka venue section, tetap boleh lanjut? biasanya jangan.
+      // tapi mengikuti flow kamu: venue dipilih setelah klik See Available Venues
+      // kita biarkan tetap wajib memilih venue atau private venue.
+    }
+
     if (usePrivateVenue) {
       if (!safeTrim(privateVenue.name)) return "Venue name is required.";
       if (!safeTrim(privateVenue.city)) return "City is required.";
       if (!safeTrim(privateVenue.fullAddress)) return "Full address is required.";
-      if (!safeTrim(privateVenue.contactPerson))
-        return "Venue contact person is required.";
+      if (!safeTrim(privateVenue.contactPerson)) return "Venue contact person is required.";
       return "";
     }
 
@@ -172,14 +167,10 @@ export default function LocationDatePhase({
     const msg = validate();
     if (msg) return onNext({ ok: false, message: msg });
 
-    // NEW: bundle draft payload for Next
     const draft = {
       location_date_info: {
-        eventDate: weddingDate,
-        weddingType: weddingType || "Traditional",
-        guestCount: toNumber(normalizedGuest),
         venueSelectionMode: usePrivateVenue ? "private_reference" : "catalog",
-        venue: usePrivateVenue ? null : venue,
+        venue: usePrivateVenue ? "" : venue,
         privateVenue: usePrivateVenue
           ? {
               name: safeTrim(privateVenue.name),
@@ -188,6 +179,9 @@ export default function LocationDatePhase({
               contactPerson: safeTrim(privateVenue.contactPerson),
             }
           : null,
+        date: weddingDate,
+        guestCount: toNumber(normalizedGuest),
+        weddingType: weddingType || "Traditional",
       },
     };
 
@@ -196,11 +190,14 @@ export default function LocationDatePhase({
 
   return (
     <div className="flex flex-col justify-between h-full">
+      {/* content */}
       <div className="overflow-scroll h-full">
         <div>
           <h2 className="text-2xl">Location & Date</h2>
           <p>Please submit requirements below so we can reserve your date and venue</p>
         </div>
+
+        {error ? <div className="text-red-600 mt-3">{error}</div> : null}
 
         <div>
           <div className="flex flex-col gap-24 mt-10">
@@ -253,7 +250,7 @@ export default function LocationDatePhase({
                 />
 
                 {toNumber(guestCount) > 0 ? (
-                  !toggleDisplayVenue && (
+                  !toggleDisplayVenue ? (
                     <button
                       type="button"
                       className="button1 rounded-lg"
@@ -261,7 +258,7 @@ export default function LocationDatePhase({
                     >
                       See Available Venues
                     </button>
-                  )
+                  ) : null
                 ) : (
                   <p className="text-xs w-60 text-red-400">
                     * Final prices may vary based on your estimated guest count.
@@ -283,8 +280,6 @@ export default function LocationDatePhase({
                   onChange={(e) => {
                     const checked = e.target.checked;
                     setUsePrivateVenue(checked);
-
-                    // kalau user switch ke private, jangan maksa venue katalog tersisa
                     if (checked) setVenue("");
                   }}
                 />
@@ -346,7 +341,7 @@ export default function LocationDatePhase({
                         <p className="text-sm">Venue Contact Person</p>
                         <input
                           className="bd rounded-lg p-2 w-80 outline-0"
-                          type="text"
+                          type="phone"
                           value={privateVenue.contactPerson}
                           onChange={(e) =>
                             setPrivateVenue((s) => ({
@@ -354,7 +349,7 @@ export default function LocationDatePhase({
                               contactPerson: e.target.value,
                             }))
                           }
-                          placeholder="Name / phone / email"
+                          placeholder="Enter Contact Number"
                         />
                       </div>
 
@@ -366,37 +361,29 @@ export default function LocationDatePhase({
                 </div>
               ) : (
                 // CATALOG VENUE GRID
-                <div className="mt-8">
-                  {venuesError ? (
-                    <div className="text-red-600">{String(venuesError)}</div>
-                  ) : null}
+                <div className="mt-6">
+                  {venuesError ? <div className="text-red-600">{String(venuesError)}</div> : null}
 
                   {venuesLoading ? (
                     <LoadingSkeleton />
+                  ) : filteredVenues.length === 0 ? (
+                    <div className="text-sm text-gray-600">
+                      No venues available for{" "}
+                      <span className="font-semibold">{normalizedGuest}</span> guests. Please
+                      adjust your guest count or wedding type.
+                    </div>
                   ) : (
-                    <>
-                      {filteredVenues.length === 0 ? (
-                        <div className="text-sm text-gray-600">
-                          No venues available for your{" "}
-                          <span className="font-semibold">{weddingType}</span>{" "}
-                          wedding type with{" "}
-                          <span className="font-semibold">{normalizedGuest}</span>{" "}
-                          guests. Please adjust your guest count, or change your wedding type.
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                          {filteredVenues.map((v, k) => (
-                            <VenueBox
-                              key={v?.id ?? v?.name ?? k}
-                              v={v}
-                              selectedVenue={venue}
-                              setVenue={setVenue}
-                              normalizedGuest={normalizedGuest}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                      {filteredVenues.map((v, k) => (
+                        <VenueBox
+                          key={v?.id ?? v?.name ?? k}
+                          v={v}
+                          selectedVenue={venue}
+                          setVenue={setVenue}
+                          normalizedGuest={normalizedGuest}
+                        />
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
@@ -411,17 +398,7 @@ export default function LocationDatePhase({
             Back
           </button>
 
-          <button
-            className={
-              usePrivateVenue
-                ? "button2 w-50 rounded-lg"
-                : venue
-                ? "button2 w-50 rounded-lg"
-                : "button-grayed w-50 rounded-lg disabled:bg-gray-400"
-            }
-            type="button"
-            onClick={handleNext}
-          >
+          <button className="button2 w-50 rounded-lg" type="button" onClick={handleNext}>
             Next
           </button>
         </div>

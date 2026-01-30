@@ -11,6 +11,9 @@ import { navigateWithOrigin } from "@/utils/navigation";
 
 import PackagePhase from "@/components/PackagePhase";
 import LocationDatePhase from "@/components/LocationDatePhase";
+import ReservationDetailsPhase from "@/components/ReservationDetailsPhase";
+import BookingConfirmationPhase from "@/components/BookingConfirmationPhase";
+
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 // Utils
@@ -34,172 +37,20 @@ function toNumber(v) {
 // =========================
 
 
-function CustomerInfoPhase({
-  name,
-  setName,
-  phone,
-  setPhone,
-  bridegroom,
-  setBridegroom,
-  bride,
-  setBride,
-  onBack,
-  onNext,
-  error,
-}) {
-  const validate = () => {
-    if (!safeTrim(name)) return "Nama wajib diisi.";
-    if (!safeTrim(phone)) return "No HP wajib diisi.";
-    if (!safeTrim(bridegroom)) return "Nama bridegroom wajib diisi.";
-    if (!safeTrim(bride)) return "Nama bride wajib diisi.";
-    return "";
-  };
 
-  const handleNext = async () => {
-    const msg = validate();
-    if (msg) return onNext({ ok: false, message: msg });
-    await onNext({ ok: true });
-  };
 
-  return (
-    <div className="space-y-3">
-      <h2 className="text-xl font-semibold">Customer Info</h2>
-
-      {error ? <div className="text-red-600">{error}</div> : null}
-
-      <input
-        className="border p-2 w-full"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Full Name"
-      />
-      <input
-        className="border p-2 w-full"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        placeholder="Phone"
-      />
-      <input
-        className="border p-2 w-full"
-        value={bridegroom}
-        onChange={(e) => setBridegroom(e.target.value)}
-        placeholder="Bridegroom"
-      />
-      <input
-        className="border p-2 w-full"
-        value={bride}
-        onChange={(e) => setBride(e.target.value)}
-        placeholder="Bride"
-      />
-
-      <div className="flex gap-2">
-        <button className="border px-4 py-2" onClick={onBack}>
-          Back
-        </button>
-        <button className="border px-4 py-2" onClick={handleNext}>
-          Next
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function PaymentPhase({
-  paymentSystem,
-  setPaymentSystem,
-  paymentMethod,
-  setPaymentMethod,
-  onBack,
-  onSubmit,
-  error,
-}) {
-  const validate = () => {
-    if (!safeTrim(paymentSystem)) return "Pilih payment system.";
-    if (!safeTrim(paymentMethod)) return "Pilih payment method.";
-    return "";
-  };
-
-  const handleSubmit = async () => {
-    const msg = validate();
-    if (msg) return onSubmit({ ok: false, message: msg });
-    await onSubmit({ ok: true });
-  };
-
-  return (
-    <div className="space-y-3">
-      <h2 className="text-xl font-semibold">Payment</h2>
-
-      {error ? <div className="text-red-600">{error}</div> : null}
-
-      <div className="space-y-2">
-        <div className="text-sm font-medium">Payment System</div>
-        <label className="flex gap-2 items-center">
-          <input
-            type="radio"
-            name="paymentSystem"
-            value="full"
-            checked={paymentSystem === "full"}
-            onChange={(e) => setPaymentSystem(e.target.value)}
-          />
-          Full
-        </label>
-        <label className="flex gap-2 items-center">
-          <input
-            type="radio"
-            name="paymentSystem"
-            value="dp50"
-            checked={paymentSystem === "dp50"}
-            onChange={(e) => setPaymentSystem(e.target.value)}
-          />
-          DP 50%
-        </label>
-      </div>
-
-      <div className="space-y-1">
-        <label className="block text-sm">Payment Method</label>
-        <select
-          className="border p-2 w-full"
-          value={paymentMethod}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-        >
-          <option value="">-- pilih --</option>
-          <option value="dana">Dana</option>
-          <option value="ovo">OVO</option>
-          <option value="gopay">Gopay</option>
-          <option value="banktransfer">Bank Transfer</option>
-        </select>
-      </div>
-
-      <div className="flex gap-2">
-        <button className="border px-4 py-2" onClick={onBack}>
-          Back
-        </button>
-        <button className="border px-4 py-2" onClick={handleSubmit}>
-          Submit
-        </button>
-      </div>
-
-      <div className="text-xs text-gray-600">
-        Catatan: jangan simpan data kartu sensitif (misal CVV) ke Firestore.
-      </div>
-    </div>
-  );
-}
-
-function CompletedPhase({ onMakeAnother, onGoHome }) {
+function CompletedPhase({onGoHome }) {
   return (
     <div className="space-y-3">
       <h2 className="text-xl font-semibold">Reservation Completed</h2>
       <div className="text-sm text-gray-700">
-        Booking kamu sudah tersimpan. Admin akan melakukan konfirmasi.
+        Thank you for your reservation! We will contact you soon.
       </div>
       <div className="flex gap-2">
         <button className="border px-4 py-2" onClick={onGoHome}>
-          Go Home
+          To Home Page
         </button>
-        <button className="border px-4 py-2" onClick={onMakeAnother}>
-          Make Another Booking
-        </button>
+        
       </div>
     </div>
   );
@@ -210,10 +61,11 @@ function CompletedPhase({ onMakeAnother, onGoHome }) {
 // =========================
 export default function BookingPage() {
   const router = useRouter();
+  
+  // API FETCHES
   const { user, loading: authReadyLoading } = useAuth();
 
-  // Db Fetch
-  // PACKAGE
+  // PACKAGES
   const {db, colRef, query, orderBy, serverTimestamp, addDoc, setDoc, listenDoc} = useDb();
   const packageQuery = useMemo(() => {
       return () => query(colRef("Packages"), orderBy("order_value", "asc"));
@@ -226,27 +78,86 @@ export default function BookingPage() {
   } = useCollection(packageQuery, [], { enabled: true });
   const pkg_default_value = packages.find((p) => p.code === "STANDART")?.name || "Standart";
   
+// VENUES
+  const venueQuery = useMemo(() => {
+    return () => query(colRef("Venues"));
+  }, [colRef, query]);
+
+  const {
+    rows: venueRows,
+    loading: venuesLoading,
+    error: venuesError,
+  } = useCollection(venueQuery, [], { enabled: true });
 
 
+//  =================== STATES ===================================
   const [bookingId, setBookingId] = useState(null);
   const [bookingPhase, setBookingPhase] = useState(1);
   const [error, setError] = useState("");
 
   // Phase fields
+
+  // PACKAGE STATES
   const [packageList, setPackageList] = useState(pkg_default_value);
 
+  // LOCATION & DATE STATES
   const [venue, setVenue] = useState("");
   const [guestCount, setGuestCount] = useState("");
   const [weddingDate, setWeddingDate] = useState("");
   const [weddingType, setWeddingType] = useState("")
 
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [bridegroom, setBridegroom] = useState("");
-  const [bride, setBride] = useState("");
+  // NEW: private venue flow
+  const [usePrivateVenue, setUsePrivateVenue] = useState(false);
+  const [privateVenue, setPrivateVenue] = useState({
+    name: "",
+    city: "",
+    fullAddress: "",
+    contactPerson: "",
+  });
 
-  const [paymentSystem, setPaymentSystem] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
+  // CUSTOMER DETAIL STATES
+  const [reservationName, setReservationName] = useState("");
+  const [primaryContactNumber, setPrimaryContactNumber] = useState("");
+  const [groomName, setGroomName] = useState("");
+  const [brideName, setBrideName] = useState("");
+
+  // PAYMENT INFO STATES
+  const [paymentSystem, setPaymentSystem] = useState("dp50");
+  const [paymentMethod, setPaymentMethod] = useState("Bank Transfer");
+  const [estimatedBaseTotalPrice, setEstimatedBaseTotalPrice] = useState(0);
+
+  // ESTIMATED BASE PRICE
+  // const estimatedBaseTotalPrice = useMemo(() => {
+  //   if (!venue) return 0;
+  //   if (!guestCount) return 0;
+  //   if (!weddingDate) return 0;
+  //   if (!weddingType) return 0;
+  //   if (usePrivateVenue) {
+  //     if (!privateVenue.name) return 0;
+  //     if (!privateVenue.city) return 0;
+  //     if (!privateVenue.fullAddress) return 0;
+  //     if (!privateVenue.contactPerson) return 0;
+  //   }
+
+  //   // Base Price Calculations
+  //   return 100000;
+  //   }, [venue, guestCount, weddingDate, weddingType, usePrivateVenue, privateVenue]);
+
+  // MAIN CALCULATIONS
+  const updateTotalEstimate = () => {
+    
+    const targetPackage = packages.find((p) => p.name === packageList) || "";
+    const targetVenue = venueRows.find((v) => v.id === venue) || "";
+
+    const targetPackagePrice = targetPackage?.base_price || 0;
+    const targetVenuePrice = targetVenue?.base_price || 0;
+   
+
+    // For now do Basic Calculation
+    setEstimatedBaseTotalPrice(targetPackagePrice + targetVenuePrice);
+    console.log(estimatedBaseTotalPrice);
+
+  }
 
   const draftKey = useMemo(() => {
     return user ? `booking_draft_${user.uid}` : null;
@@ -268,7 +179,8 @@ export default function BookingPage() {
 
     const id = idOverride || bookingId;
     if (!id) throw new Error("NO_BOOKING_ID");
-
+    console.log("updateBooking", id, partial);
+    updateTotalEstimate()
     await setDoc(
         "Bookings",
         id,
@@ -303,23 +215,28 @@ export default function BookingPage() {
       bookingStatus: "Pending",
 
       customer_info: {
-        name: "",
-        phone: "",
-        bridegroom: "",
-        bride: "",
+        reservation_name: "",
+        primary_contact_number: "",
+        groom_name: "",
+        bride_name: "",
       },
       location_date_info: {
         venue: "",
         date: "",
-        guestCount: 0,
+        guest_count: 0,
+        wedding_type: "",
+        venueSelectionMode: "catalog",
+        private_venue: null,
       },
       payment_info: {
         payment_system: "",
         payment_method: "",
       },
       package_info: {
-        packageList: packageList || "basic",
+        package_list: packageList || "basic",
       },
+
+      estimated_total_price: 0,
 
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -336,17 +253,23 @@ export default function BookingPage() {
     setError("");
 
     setPackageList(pkg_default_value);
+
     setVenue("");
     setGuestCount("");
     setWeddingDate("");
+    setWeddingType("");
+    setUsePrivateVenue(false);
+    setPrivateVenue({ name: "", city: "", fullAddress: "", contactPerson: "" });
 
-    setName("");
-    setPhone("");
-    setBridegroom("");
-    setBride("");
+    setReservationName("");
+    setPrimaryContactNumber("");
+    setGroomName("");
+    setBrideName("");
 
-    setPaymentSystem("");
-    setPaymentMethod("");
+    setPaymentSystem("dp50");
+    setPaymentMethod("Bank Transfer");
+
+    setEstimatedBaseTotalPrice(0);
   };
 
   const startNewBooking = () => {
@@ -384,19 +307,33 @@ export default function BookingPage() {
         setBookingId(snap.id);
         setBookingPhase(b.bookingPhase || 1);
 
-        setPackageList(b.package_info?.packageList || "Standart");
+        setPackageList(b.package_info?.package_list || "Standart");
 
         setVenue(b.location_date_info?.venue || "");
-        setGuestCount(String(b.location_date_info?.guestCount ?? ""));
+        setGuestCount(String(b.location_date_info?.guest_count ?? ""));
         setWeddingDate(b.location_date_info?.date || "");
+        setWeddingType(b.location_date_info?.wedding_type || "");
 
-        setName(b.customer_info?.name || "");
-        setPhone(b.customer_info?.phone || "");
-        setBridegroom(b.customer_info?.bridegroom || "");
-        setBride(b.customer_info?.bride || "");
 
-        setPaymentSystem(b.payment_info?.payment_system || "");
-        setPaymentMethod(b.payment_info?.payment_method || "");
+        setWeddingType(b.location_date_info?.weddingType || "");
+        const mode = b.location_date_info?.venueSelectionMode || "catalog";
+        setUsePrivateVenue(mode === "private_reference");
+        setPrivateVenue(
+          b.location_date_info?.privateVenue || {
+            name: "",
+            city: "",
+            fullAddress: "",
+            contactPerson: "",
+          }
+        );
+
+        setReservationName(b.reservation_details?.reservation_name || "");
+        setPrimaryContactNumber(b.reservation_details?.primary_contact_number || "");
+        setGroomName(b.reservation_details?.groom_name || "");
+        setBrideName(b.reservation_details?.bride_name || "");
+
+        setPaymentSystem(b.payment_info?.payment_system || "dp50");
+        setPaymentMethod(b.payment_info?.payment_method || "Bank Transfer");
       },
       (err) => {
         console.error("Booking resume listener error:", err);
@@ -435,11 +372,11 @@ export default function BookingPage() {
       bookingPhase: 2,
       package_info: {
         packageList, // tetap pakai state yang kamu set di PackagePhase saat select
-        packageCode: selectedPkgCode || "",
+        package_code: selectedPkgCode || "",
         isCustom: Boolean(isCustom),
         selected_services: Array.isArray(checkedServiceCodes) ? checkedServiceCodes : [],
         // optional (kalau kamu mau simpan display name terpisah)
-        packageName: selectedPkgName || packageList || "",
+        package_name: selectedPkgName || packageList || "",
       },
     },
     id
@@ -450,38 +387,63 @@ export default function BookingPage() {
 
 
 
-  const onPhase2Next = async ({ ok, message }) => {
+  const onPhase2Next = async ({ ok, message, draft }) => {
     if (!ok) return setError(message || "Phase 2 invalid.");
 
     setError("");
     await createDraftIfNeeded();
+    const info = draft?.location_date_info;
+    if (info) {
+      // sync state from draft (optional but helps consistency)
+      setVenue(info.venue || "");
+      setWeddingDate(info.date || "");
+      setGuestCount(String(info.guestCount ?? ""));
+      setWeddingType(info.weddingType || "");
+      setUsePrivateVenue(info.venueSelectionMode === "private_reference");
+      setPrivateVenue(
+        info.privateVenue || { name: "", city: "", fullAddress: "", contactPerson: "" }
+      );
+    }
+
     await updateBooking({
       bookingPhase: 3,
       location_date_info: {
-        venue,
-        date: weddingDate,
-        guestCount: toNumber(guestCount),
+        venue: info ? info.venue : venue,
+        date: info ? info.date : weddingDate,
+        guest_count: info ? toNumber(info.guestCount) : toNumber(guestCount),
+        wedding_type: info ? (info.weddingType || "") : (weddingType || ""),
+        venueSelectionMode: info ? (info.venueSelectionMode || "catalog") : (usePrivateVenue ? "private_reference" : "catalog"),
+        private_venue: info ? (info.privateVenue || null) : (usePrivateVenue ? privateVenue : null),
       },
     });
     setBookingPhase(3);
   };
 
-  const onPhase3Next = async ({ ok, message }) => {
+  const onPhase3Next = async ({ ok, message, draft }) => {
     if (!ok) return setError(message || "Phase 3 invalid.");
 
     setError("");
     await createDraftIfNeeded();
+
+    const info = draft?.reservation_details;
+
     await updateBooking({
       bookingPhase: 4,
       customer_info: {
-        name: safeTrim(name),
-        phone: safeTrim(phone),
-        bridegroom: safeTrim(bridegroom),
-        bride: safeTrim(bride),
+        reservation_name: safeTrim(info?.customer?.reservationName ?? reservationName),
+        primary_contact_number: safeTrim(info?.customer?.primaryContactNumber ?? primaryContactNumber),
+        groom_name: safeTrim(info?.customer?.groom_name ?? groomName),
+        bride_name: safeTrim(info?.customer?.bride_name ?? brideName),
+      },
+      payment_info: {
+        payment_system: info?.payment?.payment_system ?? paymentSystem,
+        payment_method: info?.payment?.payment_method ?? paymentMethod,
       },
     });
+
     setBookingPhase(4);
   };
+
 
   const onPhase4Submit = async ({ ok, message }) => {
     if (!ok) return setError(message || "Phase 4 invalid.");
@@ -491,12 +453,10 @@ export default function BookingPage() {
 
     await updateBooking({
       bookingPhase: 5,
-      payment_info: {
-        payment_system: paymentSystem,
-        payment_method: paymentMethod,
-      },
       bookingCompleted: true,
-      completedAt: db.serverTimestamp(),
+      bookingConfirmedByAdmin: false,
+      bookingStatus: "Pending",
+      estimated_total_price: estimatedBaseTotalPrice,
     });
 
     // Clear draft key so a new booking starts from scratch
@@ -529,6 +489,7 @@ export default function BookingPage() {
             packages={packages}
             packagesLoading={packagesLoading}
             packagesError={packagesError}
+
             packageList={packageList}
             setPackageList={setPackageList}
             onNext={onPhase1Next}
@@ -538,6 +499,12 @@ export default function BookingPage() {
 
         {bookingPhase === 2 && (
           <LocationDatePhase
+
+            venueRows={venueRows}
+            venuesLoading={venuesLoading}
+            venuesError={venuesError}
+
+
             venue={venue}
             setVenue={setVenue}
             guestCount={guestCount}
@@ -546,6 +513,10 @@ export default function BookingPage() {
             setWeddingDate={setWeddingDate}
             weddingType={weddingType}
             setWeddingType={setWeddingType}
+            usePrivateVenue={usePrivateVenue}
+            setUsePrivateVenue={setUsePrivateVenue}
+            privateVenue={privateVenue}
+            setPrivateVenue={setPrivateVenue}
             onBack={() => setBookingPhase(1)}
             onNext={onPhase2Next}
             error={error}
@@ -553,15 +524,19 @@ export default function BookingPage() {
         )}
 
         {bookingPhase === 3 && (
-          <CustomerInfoPhase
-            name={name}
-            setName={setName}
-            phone={phone}
-            setPhone={setPhone}
-            bridegroom={bridegroom}
-            setBridegroom={setBridegroom}
-            bride={bride}
-            setBride={setBride}
+          <ReservationDetailsPhase
+            reservationName={reservationName}
+            setReservationName={setReservationName}
+            primaryContactNumber={primaryContactNumber}
+            setPrimaryContactNumber={setPrimaryContactNumber}
+            groomName={groomName}
+            setGroomName={setGroomName}
+            brideName={brideName}
+            setBrideName={setBrideName}
+            paymentSystem={paymentSystem}
+            setPaymentSystem={setPaymentSystem}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
             onBack={() => setBookingPhase(2)}
             onNext={onPhase3Next}
             error={error}
@@ -569,11 +544,8 @@ export default function BookingPage() {
         )}
 
         {bookingPhase === 4 && (
-          <PaymentPhase
-            paymentSystem={paymentSystem}
-            setPaymentSystem={setPaymentSystem}
-            paymentMethod={paymentMethod}
-            setPaymentMethod={setPaymentMethod}
+          <BookingConfirmationPhase
+            bookingId={bookingId}
             onBack={() => setBookingPhase(3)}
             onSubmit={onPhase4Submit}
             error={error}

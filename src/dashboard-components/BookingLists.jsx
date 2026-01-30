@@ -7,7 +7,10 @@ import Overlay from "@/components/Overlay";
 import BookingInformation from "./BookingInformation";
 import StatusPill from "@/components/StatusPill";
 
-const STATUS = ["All Bookings", "Pending", "Accepted", "On Project", "Cancelled"];
+import { bookingStatuses } from "@/utils/status";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
+// const STATUS = ["All Bookings", "Pending", "Accepted", "On Project", "Cancelled"];
+
 const MODES = ["List", "Calendar"];
 
 
@@ -27,35 +30,37 @@ function formatTimestamp(ts) {
   }
 }
 
-function ListItem ({ b , handleSelect, selected}) {
+function ListItem ({ b , handleSelect, }) {
 
-    const name = b.customer_info?.name || "-";
-    const phone = b.customer_info?.phone || "-";
-    const venue = b.location_date_info?.venue || "-";
+    const name = b.customer_info?.reservation_name || "-";
     const date = formatDate(b.location_date_info?.date);
     const pkg = b.package_info?.packageList || "-";
+ 
 
     return (
-        <button className="flex flex-row items-center gap-4 p-2 rounded-xl glassmorphism-pop w-full h-16 overflow-hidden" 
+        <button className="flex flex-row items-center gap-4 p-2 rounded-xl bd-2 w-full h-12 overflow-hidden" 
         onClick={() => handleSelect(b.id)}>
             <div className="flex flex-col items-baseline justify-start w-20 overflow-clip">
                 <p className="text-xs">Booking ID</p>
-                <p>{b.id}</p>
+                <p className="text-sm">{b.id}</p>
             </div>
-            <div className="flex flex-col items-baseline justify-start w-14">
+            <div className="flex flex-col items-baseline justify-start w-34 overflow-clip">
+                <p className="text-xs">Package</p>
+                <p className="text-sm">{pkg}</p>
+            </div>
+            <div className="flex flex-col items-baseline justify-start w-24 overflow-clip">
                 <p className="text-xs">Name</p>
-                <p>{name}</p>
+                <p className="text-sm">{name}</p>
             </div>
-            <div className="flex flex-col items-baseline justify-start w-24 overflow-hidden">
+            <div className="flex flex-col items-baseline justify-start w-24 overflow-clip">
                 <p className="text-xs">Date</p>
-                <p>{date}</p>
+                <p className="text-sm">{date}</p>
             </div>
-            <div className="flex flex-col items-baseline justify-start w-20 h-full">
-                <p className="text-xs">Status</p>
-                <StatusPill status={b.bookingStatus} />
+            <div className="flex flex-col items-center justify-center w-20 h-full">
+                <StatusPill statusLabel={b.bookingStatus} />
             </div>
             <div className="flex flex-col items-baseline justify-start">
-                <p>{formatTimestamp(b.createdAt)}</p>
+                <p className="text-sm">{formatTimestamp(b.createdAt)}</p>
             </div>
             {/* <div>
                 <Image src="icons/icons8-right.svg" width={10} height={10} alt="arrow-right" />
@@ -87,7 +92,7 @@ export default function BookingLists({
   usersById = {},
   loading = false,
   error = null,
-  action
+  patchBooking,
 }) {
   const [activeStatus, setActiveStatus] = useState("All Bookings");
   const [activeMode, setActiveMode] = useState("List");
@@ -112,14 +117,24 @@ export default function BookingLists({
   }, [completedBookings, activeStatus]);
   
   
-  const [selectedBooking, setSelectedBooking] = useState(null);
-  
-  const handleSelectBooking = (id) => {
-    setSelectedBooking(id);
-  };
   const findBookingById = (id) => {
     return bookings.find((b) => b.id === id);
   };
+  
+  
+  const updateBookingStatus = (id, status) => {
+    patchBooking(id, { bookingStatus: status });
+  };
+  
+  
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [toggleAutoReview, setToggleAutoReview] = useState(true);
+  const onListSelected = (id) => {
+    setSelectedBooking(id);
+    if (toggleAutoReview) findBookingById(id).bookingStatus === "Pending" && updateBookingStatus(id, "On Review");
+  };
+  
+
 
   // Pop Ups
   const [togglePopUp, setTogglePopUp] = useState("")
@@ -142,27 +157,35 @@ export default function BookingLists({
 
 
   return (
-    <div className="mt-6 flex flex-row justify-between h-132">
-        {/* Left Display */}
-        <div className="w-150">
+    <div className="mt-6 flex flex-row justify-between h-full px-4">
+       
+      <div className="w-full h-120">
       {/* FILTERs */}
-      <div className="flex flex-row gap-4">
+      <div className="flex flex-row w-full justify-between">
         {/* Status Filter */}
-        <div className="flex flex-wrap mb-4 glassmorphism-pop shadow-dark w-fit rounded-xl">
-            {STATUS.map((s) => (
+        <div className="flex flex-wrap mb-4 glassmorphism-pop shadow-dark w-fit rounded-xl p-1">
             <button
-                key={s}
                 className={`px-4 py-2 rounded-xl text-xs ${
-                activeStatus === s ? "bg-emerald-500 text-white" : ""
+                activeStatus === "All Bookings" ? "bg-emerald-500 text-white" : ""
                 }`}
-                onClick={() => setActiveStatus(s)}
+                onClick={() => setActiveStatus("All Bookings")}
             >
-                {s}
+                All Bookings
+            </button>
+            {bookingStatuses.map((s, id) => (
+            <button
+                key={id}
+                className={`px-4 py-2 rounded-xl text-xs ${
+                activeStatus === s.label ? `${s.color} ${s.textColor}` : ""
+                }`}
+                onClick={() => setActiveStatus(s.label)}
+            >
+                {s.label}
             </button>
             ))}
         </div>
         {/* List or Calender View */}
-        <div className="flex flex-wrap mb-4 glassmorphism-pop shadow-dark w-fit rounded-xl">
+        <div className="flex flex-wrap mb-4 glassmorphism-pop shadow-dark w-fit rounded-xl p-1">
             {MODES.map((m) => (
                 <button
                 key={m}
@@ -180,12 +203,18 @@ export default function BookingLists({
 
       </div>
 
-      {/* List */}
-      <div className="w-full overflow-x-auto flex flex-col gap-4 overflow-y-scroll">
+      {/* List Container*/}
+      <div className="w-full overflow-x-auto flex flex-col gap-2 overflow-y-scroll px-2 py-2 glassmorphism shadow-dark rounded-xl h-full">
+        <div className="flex flex-row gap-2 items-center p-2">
+          <input type="checkbox" name="autoRev" id="1"
+          className="w-3 h-3"
+          onChange={(e) => setToggleAutoReview(e.target.checked)}
+          checked = {toggleAutoReview}
+          />
+          <p className="text-xs">Auto set status on review upon checking</p>
+        </div>
         {loading && (
-          <div className="text-sm opacity-80">
-            Memuat booking yang sudah disubmit...
-          </div>
+          <LoadingSkeleton />
         )}
 
         {!loading && error && (
@@ -200,33 +229,34 @@ export default function BookingLists({
           </div>
         )}
 
-        {!loading && !error && filteredBookings.length > 0 && (
-            filteredBookings.map((b) => (
-                <ListItem key={b.id} b={b} handleSelect={handleSelectBooking} selected={selectedBooking === b.id} />
-            ))
-        )}
+        {!selectedBooking ?
+          !loading && !error && filteredBookings.length > 0 && (
+              filteredBookings.map((b) => (
+                  <ListItem key={b.id} b={b} handleSelect={onListSelected} selected={selectedBooking === b.id} />
+              ))
+        ) : <BookingInformation 
+          b={findBookingById(selectedBooking)} 
+          u={usersById[findBookingById(selectedBooking)?.customer_id]}
+          onClose= {() => setSelectedBooking(null)}
+          />}
+
+
       </div>
         </div>
 
-        {/* Right Display */}
-        { selectedBooking && 
-        <BookingInformation
-         b={findBookingById(selectedBooking)}
-         u={usersById?.[findBookingById(selectedBooking)?.customer_id]}
-         setTogglePopUp = {setTogglePopUp}
-         /> }
-
-        {/* overlay */}
-        { togglePopUp && 
-        <Overlay
-        isOpen={togglePopUp}
-        onClose={() => setTogglePopUp("")}
-        contentClassName="absolute top-0 right-0 h-screen bg-white shadow-xl p-4"
+        {/* <Overlay
+        onClose={() => setSelectedBooking(null)}
+        isOpen={selectedBooking}
+        contentClassName = {"w-full h-full bg-white"}
         >
-            {/* { popUps.find((p) => p.name === togglePopUp)?.component(popUpProps) } */}
-            { ActivePopUp && <ActivePopUp.component {...ActivePopUp.props} />}
-        </Overlay>
-        }
+          <BookingInformation 
+          b={findBookingById(selectedBooking)} 
+          u={usersById[findBookingById(selectedBooking)?.customer_id]}
+          onClose= {() => setSelectedBooking(null)}
+          />
+       
+        </Overlay> */}
+
     </div>
   );
 }

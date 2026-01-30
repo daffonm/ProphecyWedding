@@ -60,38 +60,38 @@ export default function AdminDashboard() {
   }, [db]);
 
   // ====== BOOKING ACTIONS: TERIMA / TOLAK / DLL ======
-  const acceptBooking = useCallback(async (bookingId) => {
-    await patchBooking(bookingId, {
-      bookingConfirmedByAdmin: true,
-      bookingStatus: "Accepted",
-      confirmedAt: serverTimestamp(),
+  // const acceptBooking = useCallback(async (bookingId) => {
+  //   await patchBooking(bookingId, {
+  //     bookingConfirmedByAdmin: true,
+  //     bookingStatus: "Accepted",
+  //     confirmedAt: serverTimestamp(),
   
-    });
-  }, [patchBooking, db]);
+  //   });
+  // }, [patchBooking, db]);
 
-  const rejectBooking = useCallback(async (bookingId, reason = "") => {
-    await patchBooking(bookingId, {
-      bookingConfirmedByAdmin: false,
-      bookingStatus: "Rejected",
-      rejectedAt: serverTimestamp(),
-      rejectReason: String(reason || "").trim(),
+  // const rejectBooking = useCallback(async (bookingId, reason = "") => {
+  //   await patchBooking(bookingId, {
+  //     bookingConfirmedByAdmin: false,
+  //     bookingStatus: "Rejected",
+  //     rejectedAt: serverTimestamp(),
+  //     rejectReason: String(reason || "").trim(),
    
-    });
-  }, [patchBooking, db]);
+  //   });
+  // }, [patchBooking, db]);
 
-  const markInProgress = useCallback(async (bookingId) => {
-    await patchBooking(bookingId, {
-      bookingStatus: "In Progress",
+  // const markInProgress = useCallback(async (bookingId) => {
+  //   await patchBooking(bookingId, {
+  //     bookingStatus: "In Progress",
    
-    });
-  }, [patchBooking]);
+  //   });
+  // }, [patchBooking]);
 
-  const markDone = useCallback(async (bookingId) => {
-    await patchBooking(bookingId, {
-      bookingStatus: "Completed",
+  // const markDone = useCallback(async (bookingId) => {
+  //   await patchBooking(bookingId, {
+  //     bookingStatus: "Completed",
      
-    });
-  }, [patchBooking, db]);
+  //   });
+  // }, [patchBooking, db]);
 
 
   // ====== Side Menus ====== 
@@ -105,14 +105,7 @@ export default function AdminDashboard() {
           usersById,
           loading: bookingsLoading,
           error: bookingsError,
-          action: {
-            acceptBooking,
-            rejectBooking,
-            markInProgress,
-            markDone,
-            loadingById: actionLoadingById,
-            actionError,
-          }
+          patchBooking
         },
         sub: [
           { name: "Transactions", component: null, props: {}, parent: "Booking Lists" },
@@ -145,7 +138,7 @@ export default function AdminDashboard() {
   const activeTitle = activeSubMenu ? activeSubMenu : activeMenu;
 
   return (
-    <section className="gradient-1 p-8 h-screen">
+    <section className="gradient-1 p-4 h-screen">
       <div className="glassmorphism h-full flex">
         <SideMenu
           activeMenu={activeMenu}
