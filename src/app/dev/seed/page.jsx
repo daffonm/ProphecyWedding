@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useDb } from "@/context/DbContext";
 
-import { SERVICES, VENDORS, PACKAGES, VENUES } from "@/utils/seedDummy";
+import { SERVICES, VENDORS, PACKAGES, VENUES, PRODUCT } from "@/utils/seedDummy";
 
 /**
  * Drop this file anywhere in your project, e.g:
@@ -93,7 +93,11 @@ export default function FirestoreSeederPage() {
 
       // Example: Existing collection "Bookings"
       // - Use addDoc if you want auto document IDs
-      
+      Vendors : {
+        mode: "addDoc",
+        docs: VENDORS,
+      },
+
 
 
     };
@@ -167,7 +171,7 @@ export default function FirestoreSeederPage() {
           for (const item of docs) {
             const payload = item?.data ? item.data : item;
             const data = hydrateSpecialValues(payload || {});
-            const ref = await addDoc(colName, data);
+            const ref = await addDoc(colName, data, { merge: true });
             log(`  added: ${colName}/${ref?.id || "(id unknown)"}`);
           }
         } else {

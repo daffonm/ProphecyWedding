@@ -7,19 +7,17 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  updateProfile,
 } from "firebase/auth";
 
 import { db } from "@/lib/firebase-config";
-import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
-
+import { doc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 
 const AuthContext = createContext(null);
 
 function mapAuthError(code) {
-    switch (code) {
-        case "auth/invalid-credential":
-            return "Email atau password salah, atau akun belum terdaftar.";
+  switch (code) {
+    case "auth/invalid-credential":
+      return "Email atau password salah, atau akun belum terdaftar.";
     case "auth/email-already-in-use":
       return "Email sudah terdaftar. Silakan login.";
     case "auth/weak-password":
@@ -41,30 +39,26 @@ function normalizeEmail(email) {
   return String(email ?? "").trim().toLowerCase();
 }
 
-
 export default function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null);
 
-  // loading: status user sedang ditentukan (awal app)
+  // loading: status auth sedang ditentukan (awal app)
   const [loading, setLoading] = useState(true);
 
   // authLoading: sedang proses login/register/logout
   const [authLoading, setAuthLoading] = useState(false);
 
-  // NEW, profile / role loading
+  // profileLoading: sedang ambil Users/{uid}
   const [profileLoading, setProfileLoading] = useState(false);
 
-  // NEW: user profile + doc
+  // userDoc + role dari Firestore Users/{uid}
   const [userDoc, setUserDoc] = useState(null);
   const [role, setRole] = useState(null);
 
-
   const [error, setError] = useState(null);
-
   const clearError = () => setError(null);
 
-  // Optional: bikin session cookie (kalau lu pakai /api/session)
-  // Kalau belum pakai, biarin aja ignore.
+  // Optional session cookie (kalau kamu pakai /api/session)
   const createSession = async (idToken) => {
     try {
       const res = await fetch("/api/session", {
@@ -72,11 +66,8 @@ export default function AuthProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
-
-      // Kalau lu belum bikin endpoint ini, biasanya 404. Kita ignore supaya gak ganggu client-only.
       if (!res.ok) {
-        // Uncomment kalau lu mau strict (wajib session)
-        // throw new Error("SESSION_FAILED");
+        // ignore
       }
     } catch {
       // ignore
@@ -91,38 +82,49 @@ export default function AuthProvider({ children }) {
     }
   };
 
+  // 1) Auth listener (realtime dari Firebase Auth)
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
 
-
-      if (!u) {        // logged out
+      if (!u) {
         setUserDoc(null);
         setRole(null);
-        return;
-      }
-
-      // Ambil Role dari Firestore
-      setProfileLoading(true);
-      // Fetch user document from Firestore
-      try {
-        const snap = await getDoc(doc(db, "Users", u.uid));
-        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-        setUserDoc(data);
-        setRole(data?.role ?? null);
-      } catch (err) {
-        console.error("FETCH USER DOC ERROR:", err);
-        setUserDoc(null);
-        setRole(null);
-      } finally {
         setProfileLoading(false);
       }
-
     });
 
     return () => unsub();
   }, []);
+
+  // 2) User profile listener (realtime dari Firestore Users/{uid})
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    setProfileLoading(true);
+
+    const ref = doc(db, "Users", user.uid);
+
+    // realtime update: role langsung berubah tanpa refresh
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+        setUserDoc(data);
+        setRole(data?.role ?? null);
+        setProfileLoading(false);
+      },
+      (err) => {
+        console.error("USER DOC SNAPSHOT ERROR:", err);
+        setUserDoc(null);
+        setRole(null);
+        setProfileLoading(false);
+      }
+    );
+
+    return () => unsub();
+  }, [user?.uid]);
 
   const login = async (email, password) => {
     setAuthLoading(true);
@@ -130,8 +132,6 @@ export default function AuthProvider({ children }) {
     try {
       const e = normalizeEmail(email);
       const cred = await signInWithEmailAndPassword(auth, e, password);
-
-      // Optional session cookie
       const token = await cred.user.getIdToken();
       await createSession(token);
     } catch (err) {
@@ -149,10 +149,7 @@ export default function AuthProvider({ children }) {
     try {
       const e = normalizeEmail(email);
 
-      // 1) Create account in Firebase Auth
       const cred = await createUserWithEmailAndPassword(auth, e, password);
-
-      // 2) Create Firestore user document (UID as doc id)
       const uid = cred.user.uid;
 
       await setDoc(doc(db, "Users", uid), {
@@ -161,13 +158,10 @@ export default function AuthProvider({ children }) {
         username: (username || "").trim() || e.split("@")[0],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-
-        // contoh field tambahan
         role: "customer",
         photoURL: cred.user.photoURL || null,
       });
 
-      // optional: kalau lu punya session cookie
       const token = await cred.user.getIdToken();
       await createSession(token);
     } catch (err) {
@@ -176,7 +170,7 @@ export default function AuthProvider({ children }) {
       throw err;
     } finally {
       setAuthLoading(false);
-      }
+    }
   };
 
   const logout = async () => {
@@ -184,7 +178,7 @@ export default function AuthProvider({ children }) {
     setError(null);
     try {
       await signOut(auth);
-      await destroySession(); // optional
+      await destroySession();
     } catch (err) {
       console.error("LOGOUT ERROR:", err?.code, err?.message);
       setError("Gagal logout. Coba lagi.");

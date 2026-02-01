@@ -62,6 +62,8 @@ export default function SideMenu({
   setActiveMenu,
   setActiveSubMenu,
   sideMenu,
+
+  dashboardName = "Prophecy Wedding",
 }) {
   const handleMenuClick = (menuName) => {
     // Klik menu utama lain -> pindah parent + tutup branch sebelumnya + reset sub
@@ -78,7 +80,7 @@ export default function SideMenu({
     <div className="w-96 p-4 flex flex-col justify-between bd h-full">
       <div className="flex flex-col h-full">
         <div className="flex flex-col items-center mb-4 mt-2">
-          <h2 className="text-2xl">Prophecy Wedding</h2>
+          <h2 className="text-2xl">{dashboardName}</h2>
         </div>
 
         <div className="flex flex-col p-4 gap-1">

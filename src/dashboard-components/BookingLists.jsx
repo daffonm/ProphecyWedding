@@ -122,6 +122,9 @@ export default function BookingLists({
   };
   
   
+  const updateBooking = (id, draft) => {
+    patchBooking(id, draft);
+  };
   const updateBookingStatus = (id, status) => {
     patchBooking(id, { bookingStatus: status });
   };
@@ -213,6 +216,7 @@ export default function BookingLists({
           />
           <p className="text-xs">Auto set status on review upon checking</p>
         </div>
+        
         {loading && (
           <LoadingSkeleton />
         )}
@@ -238,6 +242,7 @@ export default function BookingLists({
           b={findBookingById(selectedBooking)} 
           u={usersById[findBookingById(selectedBooking)?.customer_id]}
           onClose= {() => setSelectedBooking(null)}
+          action= {{updateBooking, updateBookingStatus}}
           />}
 
 

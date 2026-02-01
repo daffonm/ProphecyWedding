@@ -254,7 +254,9 @@ export const SERVICES = [
 export const VENDORS = [
   // ENTERTAINMENT
   {
-    id: "VEND_ENT_01",
+    uid: "VEND_ENT_01",
+    phone : "081266309659",
+    status: "idle",
     name: "Harmony Live Band",
     category: "ENTERTAINMENT",
     supported_services: ["LIVE_BAND", "ACOUSTIC_BAND"],
@@ -264,7 +266,9 @@ export const VENDORS = [
     tier: "Premium"
   },
   {
-    id: "VEND_ENT_02",
+    uid: "VEND_ENT_02",
+    phone : "081266309659",
+    status: "idle",
     name: "Acoustic Breeze",
     category: "ENTERTAINMENT",
     supported_services: ["ACOUSTIC_BAND"],
@@ -274,7 +278,9 @@ export const VENDORS = [
     tier: "Standard"
   },
   {
-    id: "VEND_ENT_03",
+    uid: "VEND_ENT_03",
+    phone : "081266309659",
+    status: "idle",
     name: "Nusantara Gamelan",
     category: "ENTERTAINMENT",
     supported_services: ["TRADITIONAL_MUSIC"],
@@ -284,7 +290,9 @@ export const VENDORS = [
     tier: "Standard"
   },
   {
-    id: "VEND_ENT_04",
+    uid: "VEND_ENT_04",
+    phone : "081266309659",
+    status: "idle",
     name: "DJ Nightwave",
     category: "ENTERTAINMENT",
     supported_services: ["DJ"],
@@ -296,7 +304,9 @@ export const VENDORS = [
 
   // DECORATION
   {
-    id: "VEND_DEC_01",
+    uid: "VEND_DEC_01",
+    phone : "081266309659",
+    status: "idle",
     name: "Lotus Decoration",
     category: "DECORATION",
     supported_services: ["DECOR_BASIC", "DECOR_STAGE", "DECOR_FULL"],
@@ -306,7 +316,9 @@ export const VENDORS = [
     tier: "Premium"
   },
   {
-    id: "VEND_DEC_02",
+    uid: "VEND_DEC_02",
+    phone : "081266309659",
+    status: "idle",
     name: "Simple Chic Decor",
     category: "DECORATION",
     supported_services: ["DECOR_STAGE", "DECOR_AISLE"],
@@ -316,7 +328,9 @@ export const VENDORS = [
     tier: "Standard"
   },
   {
-    id: "VEND_DEC_03",
+    uid: "VEND_DEC_03",
+    phone : "081266309659",
+    status: "idle",
     name: "Floral House",
     category: "DECORATION",
     supported_services: ["FLOWER_FRESH"],
@@ -328,7 +342,9 @@ export const VENDORS = [
 
   // DOCUMENTATION
   {
-    id: "VEND_DOC_01",
+    uid: "VEND_DOC_01",
+    phone : "081266309659",
+    status: "idle",
     name: "Eternal Moment Studio",
     category: "DOCUMENTATION",
     supported_services: ["PHOTO_FULLDAY", "VIDEO_CINEMATIC", "DRONE_FOOTAGE"],
@@ -338,7 +354,9 @@ export const VENDORS = [
     tier: "Premium"
   },
   {
-    id: "VEND_DOC_02",
+    uid: "VEND_DOC_02",
+    phone : "081266309659",
+    status: "idle",
     name: "Frame Story",
     category: "DOCUMENTATION",
     supported_services: ["PHOTO_AKAD", "PHOTO_RECEPTION"],
@@ -350,7 +368,9 @@ export const VENDORS = [
 
   // MAKEUP
   {
-    id: "VEND_MUA_01",
+    uid: "VEND_MUA_01",
+    phone : "081266309659",
+    status: "idle",
     name: "Glam by Aira",
     category: "MAKEUP",
     supported_services: ["MUA_BRIDE", "MUA_GROOM", "MUA_FAMILY"],
@@ -362,7 +382,9 @@ export const VENDORS = [
 
   // EVENT
   {
-    id: "VEND_EVT_01",
+    uid: "VEND_EVT_01",
+    phone : "081266309659",
+    status: "idle",
     name: "MC Ardi Pratama",
     category: "EVENT",
     supported_services: ["MC_FORMAL"],
@@ -372,7 +394,9 @@ export const VENDORS = [
     tier: "Premium"
   },
   {
-    id: "VEND_EVT_02",
+    uid: "VEND_EVT_02",
+    phone : "081266309659",
+    status: "idle",
     name: "MC Rani Putri",
     category: "EVENT",
     supported_services: ["MC_CASUAL"],
@@ -384,7 +408,9 @@ export const VENDORS = [
 
   // ADDITIONAL
   {
-    id: "VEND_ADD_01",
+    uid: "VEND_ADD_01",
+    phone : "081266309659",
+    status: "idle",
     name: "SnapBooth Indonesia",
     category: "ADDITIONAL",
     supported_services: ["PHOTOBOOTH"],
@@ -392,5 +418,68 @@ export const VENDORS = [
     cost_per_unit: 3000000,
     service_area: ["Jakarta"],
     tier: "Standard"
+  }
+]
+
+export const PRODUCT = [
+  {
+    "category": "FNB",
+    "code": "FNB_CATERING_BUFFET",
+    "label": "Buffet Catering",
+    "pricing_unit": "per_guest"
+  },
+  {
+    "category": "FNB",
+    "code": "FNB_CATERING_BOX",
+    "label": "Boxed Meal Catering",
+    "pricing_unit": "per_guest"
+  },
+  {
+    "category": "FNB",
+    "code": "FNB_TRADITIONAL",
+    "label": "Traditional Food Service",
+    "pricing_unit": "per_guest"
+  },
+  {
+    "category": "FNB",
+    "code": "FNB_INTERNATIONAL",
+    "label": "International Cuisine",
+    "pricing_unit": "per_guest"
+  },
+  {
+    "category": "FNB",
+    "code": "FNB_DESSERT",
+    "label": "Dessert & Pastry",
+    "pricing_unit": "per_guest"
+  },
+  {
+    "category": "FNB",
+    "code": "FNB_COFFEE_TEA",
+    "label": "Coffee & Tea Service",
+    "pricing_unit": "per_guest"
+  },
+  {
+    "category": "FNB",
+    "code": "FNB_BEVERAGE",
+    "label": "Non-Alcoholic Beverage",
+    "pricing_unit": "per_guest"
+  },
+  {
+    "category": "FNB",
+    "code": "FNB_SNACK",
+    "label": "Snack & Light Bites",
+    "pricing_unit": "per_guest"
+  },
+  {
+    "category": "FNB",
+    "code": "FNB_LIVE_COOKING",
+    "label": "Live Cooking Station",
+    "pricing_unit": "per_guest"
+  },
+  {
+    "category": "FNB",
+    "code": "FNB_HEALTHY",
+    "label": "Healthy & Special Diet Menu",
+    "pricing_unit": "per_guest"
   }
 ]

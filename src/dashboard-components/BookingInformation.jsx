@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 
 import { useDb } from "@/context/DbContext";
@@ -6,6 +6,7 @@ import { useCollection } from "@/hooks/useCollection";
 
 import { formatRupiah } from "@/utils/format";
 import StatusPill from "@/components/StatusPill";
+import Overlay from "@/components/Overlay";
 
 
 function formatDate(value) {
@@ -24,7 +25,7 @@ function formatTimestamp(ts) {
 }
 
 
-export default function BookingInformation ({b, u, onClose}) {
+export default function BookingInformation ({b, u, onClose, action}) {
 
     
     const bookingFields = [
@@ -53,7 +54,9 @@ export default function BookingInformation ({b, u, onClose}) {
     }, [colRef, query, getField("Venue").value]);
     const { rows: venueRows, loading: venueLoading, error: venueError } = useCollection(venueQuery, [], { enabled: Boolean(getField("Venue").value) });
     const [venue] = venueRows;  
-    console.log(venue)
+  
+    const [toggleConfirmationPopup, setToggleConfirmationPopup] = useState(false);
+   
 
     function VenueBox({v}) {
        
@@ -86,11 +89,48 @@ export default function BookingInformation ({b, u, onClose}) {
             </div>
         )
     } 
+
+    function ConfirmationPopUp({title, text, subtext = "", onClose, onConfitrm}) {
+        return (
+            <div className="p-8">
+                <div className="flex flex-col justify-center items-center gap-2">
+                    <h2>{title}</h2>
+                    <p className="text-sm">{text}</p>
+                    <p className="text-xs">{subtext}</p>
+                </div>
+                <div className="flex flex-row justify-center gap-4 mt-4">
+                    <button
+                    onClick={onClose}
+                    >Cancel</button>
+                    <button
+                    onClick={onConfitrm}
+                    >Confirm</button>
+                </div>
+            </div>
+        )
+    }
     
 
 
     return (
         <div className="">
+
+            {/* Pop Up Layer */}
+            <Overlay 
+            isOpen={toggleConfirmationPopup}
+            onClose={() => setToggleConfirmationPopup(false)}
+            contentClassName = {"w-full h-full bg-white"}
+            ><ConfirmationPopUp
+                title = {"Set up Invoice"}
+                text = {"Are you sure you want to set up invoice for this booking?"}
+                subtext = {" *this will mark the booking status into Quotation"}
+                onClose = {() => setToggleConfirmationPopup(false)}
+                onConfitrm = {() => {
+                    action.updateBookingStatus(b.id, "Quotation")
+                    action.updateBooking(b.id, { invoice_setup: true })
+                    setToggleConfirmationPopup(false)}}
+                    /></Overlay>
+
             <div className="flex flex-row gap-4 w-full">
                 <button onClick={onClose}>X</button>
                 <div className="flex flex-row justify-between w-full">
@@ -169,6 +209,10 @@ export default function BookingInformation ({b, u, onClose}) {
                             </p>
                         </div>
 
+                        <div className="mt-10">
+                            <button className="button1 w-40 text-sm">Assign a Vendor</button>
+                        </div>
+
                     </div>
 
                 </div>
@@ -238,17 +282,68 @@ export default function BookingInformation ({b, u, onClose}) {
 
                         </div>
                         
+                        <div>
                             <div>
                                 <p className="text-xs">Estimated Total Price</p>
                                 <p className="text-sm">
                                     {formatRupiah(getField("Estimated Total Price").value)}
                                 </p>
                             </div>
+                            <div className="flex flex-row gap-8 mt-14">
+                                <button
+                                onClick={() => setToggleConfirmationPopup(true)}
+                                className="button1"
+                                >Suggest a Revision</button>
+                                <button
+                                onClick={() => setToggleConfirmationPopup(true)}
+                                className="button2"
+                                >Set up Invoice</button>
 
-
-                    </div>
+                            </div>
+                        </div>
+                 </div>
 
                 </div>
+
+                { b?.invoice_setup && 
+                    <div className="glassmorphism-pop p-6 rounded-xl">
+                    <div>
+                        <h2>Payment Details</h2>
+                    </div>
+                    {/* Content */}
+                    <div className="flex flex-col gap-6">
+                        
+                        <div className="flex flex-row gap-60">
+                            <div>
+                                <p className="text-xs">Payment System</p>
+                                <p className="text-sm">
+                                    {getField("Payment System").value}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs">Payment Method</p>
+                                <p className="text-sm">
+                                    {getField("Payment Method").value}
+                                </p>
+                            </div>
+
+                        </div>
+                        
+                        <div>
+                            <div>
+                                <p className="text-xs">Estimated Total Price</p>
+                                <p className="text-sm">
+                                    {formatRupiah(getField("Estimated Total Price").value)}
+                                </p>
+                            </div>
+                            <button
+                            onClick={() => setToggleConfirmationPopup(true)}
+                            className="button1"
+                            >Set up Invoice</button>
+                        </div>
+                 </div>
+
+                </div>}
 
             </div>
         </div>

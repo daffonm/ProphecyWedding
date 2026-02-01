@@ -74,3 +74,12 @@ export const paymentStatuses = [
     },
 
 ]
+
+export const vendorStatuses  = [
+        // { label: "All Vendors", code:"all_vendors", color: "bg-emerald-500", textColor: "text-white" },
+        { label: "Idle", code:"idle",  color: "border border-emerald-500", textColor: "text-emerald-500" },
+        { label: "Assigned", code:"assigned",  color: "border border-purple-500", textColor: "text-purple-500" },
+        { label: "On Project", code:"project",  color: "border border-blue-500", textColor: "text-blue-500" },
+        { label: "Pending Approval", code:"pending",  color: "border border-yellow-500", textColor: "text-yellow-500" },
+        { label: "Unavailable", code:"unavailable",  color: "border border-red-500", textColor: "text-red-500" },
+    ]

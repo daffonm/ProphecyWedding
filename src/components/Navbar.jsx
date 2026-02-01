@@ -7,13 +7,15 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+import { useDoc } from "@/hooks/useDoc";
 
 function AccountMenu({ onClose }) {
   const [activeTab, setActiveTab] = useState(null);
 
-  const { logout } = useAuth();
-
+  const { logout} = useAuth();
 
   const menuList = [
     { key: "profile", label: "Profile Details" },
@@ -135,28 +137,42 @@ function AccountMenu({ onClose }) {
 export default function Navbar() {
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const router = useRouter();
    
+    const { user, userDoc, role, loading, profileLoading } = useAuth();
+   
+ 
+    
+    const navigateVendor = () => {
+        if (role === "vendor") {
+          router.replace("/vendor-hub");
+          return;
+        } else if (role === "vendor-pending") {
+          router.replace("/vendor-registration");
+          return;
+        }
+        router.push("/vendor-page");
+      };
 
-
-    const { user, loading } = useAuth();
 
     const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'About Us', href: '#' },
-    { name: 'Packages', href: '/packagelisting' },
-    { name: 'Vendors', href: '#' },
-    { name: 'Contact', href: '#' },
+    { name: 'Home', navigate: () => router.push('/')},
+    { name: 'About Us', navigate: () => router.push('/about')},
+    { name: 'Packages', navigate: () => router.push('/packagelisting') },
+    { name: 'Vendors', navigate: () => navigateVendor() },
+    { name: 'Contact', navigate: () => router.push('/contact') },
   ];
-  console.log("User in Navbar:", user);
+ 
 
     return <nav className="bg-white shadow-md py-4 px-4 absolute w-full z-10">
         <div className="container mx-auto flex justify-between items-center">
             <h1 className="text-xl font-bold">Prophecy Wedding</h1>
             <ul className="flex space-x-6">
                 {navLinks.map((link, index) => (
-                    <li key={index}>
-                        <Link href={link.href} className="hover:text-gray-700">{link.name}</Link>
-                    </li>
+                    <button
+                    key={index}
+                    onClick={link.navigate}
+                    >{link.name}</button>
                 ))}
             </ul>
 
@@ -165,7 +181,7 @@ export default function Navbar() {
                         <LoadingSkeleton />
                     ) : user ? (
                         <div className="flex flex-row items-center gap-8">
-                        <span>{user.username}</span>
+                          {!profileLoading && <p className="text-sm">{"Welcome, " + userDoc.username}</p>}
                         <button className=" bg-gray-200 border-black p-2 rounded-full hover:bg-gray-200" 
                         onClick={() => setIsMenuOpen(!isMenuOpen)}>
                             <Image

@@ -4,7 +4,10 @@
 import { useMemo, useState, useCallback } from "react";
 
 import SideMenu from "@/dashboard-components/SideMenu";
+
 import BookingLists from "@/dashboard-components/BookingLists";
+import VendorManagement, { VendorRegistrationList } from "@/dashboard-components/VendorManagement";
+
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 import { useDb } from "@/context/DbContext";
@@ -94,6 +97,27 @@ export default function AdminDashboard() {
   // }, [patchBooking, db]);
 
 
+
+  // VENDORS MANAGEMENT ====================================
+  const vendorQuery = useMemo(() => {
+    return () => query(colRef("Vendors"), orderBy("name", "asc"));
+  }, [colRef, query, orderBy]);
+  const {
+    rows: vendors,
+    loading: vendorsLoading,
+    error: vendorsError,
+  } = useCollection(vendorQuery, [], { enabled: true });
+  
+  const unregisteredVendor = useMemo(() => {
+    return vendors.filter((v) => v.status === "idle");
+  }, [vendors]);
+
+
+
+
+
+
+
   // ====== Side Menus ====== 
   const sideMenu = useMemo(
     () => [
@@ -113,7 +137,15 @@ export default function AdminDashboard() {
         ],
       },
       { name: "Customer Relations", component: null, props: {} },
-      { name: "Vendors & Services", component: null, props: {} },
+      { name: "Resource Management", 
+        component: VendorManagement, 
+        props: {},
+        sub: [
+          { name: "Vendor Listing", 
+            component: VendorRegistrationList, 
+            props: {vendors, unregisteredVendor, vendorsLoading, vendorsError}, 
+            parent: "Resource Management" },     
+        ]},
     ],
     [bookings, usersById, bookingsLoading, bookingsError]
   );
@@ -138,7 +170,7 @@ export default function AdminDashboard() {
   const activeTitle = activeSubMenu ? activeSubMenu : activeMenu;
 
   return (
-    <section className="gradient-1 p-4 h-screen">
+    <section className="gradient-1 p-4 h-screen"> 
       <div className="glassmorphism h-full flex">
         <SideMenu
           activeMenu={activeMenu}
