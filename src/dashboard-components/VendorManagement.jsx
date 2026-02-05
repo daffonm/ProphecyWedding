@@ -5,6 +5,8 @@ import { vendorStatuses } from "@/utils/status";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import StatusPill from "@/components/StatusPill";
 
+import Overlay from "@/components/Overlay";
+
 export default function VendorManagement({}) {
     return (
         <div>
@@ -15,11 +17,127 @@ export default function VendorManagement({}) {
 }
 
 
+function VendorProfile ({ v , onClose, action}) {
+
+    const [menuSelect, setMenuSelect] = useState("profile");
+
+
+    return (
+        <div className="bg-gray-300 bd-2 rounded-xl h-150 w-120 overflow-clip">
+            <button onClick={onClose} className="ml-4 mt-4">X</button>
+            <div className="flex flex-col w-full h-full gap-4">
+                <div className="flex flex-col items-center gap-2 py-4">
+                    <div className="w-20 h-20 rounded-full bg-gray-500">
+                        {/* Img */}
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                        <p className="bold">{v?.name}</p>
+                        <p className="text-xs">{v?.category}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs">{v?.company_desription || "-"}</p>
+                    </div>
+
+                </div>
+
+                <div className="flex flex-col h-full w-full bg-white rounded-t-xl">
+                    <div className="bg-gray-200 flex flex-row justify-evenly rounded-t-lg pt-1">
+                        <button 
+                        className={`text-sm p-1 w-full rounded-t-xl ${menuSelect === "profile" && "bg-white bd-2"}`} 
+                        onClick={() => setMenuSelect("profile")}>Profile</button>
+                        <button 
+                        className={`text-sm p-1 w-full rounded-t-xl ${menuSelect === "media" && "bg-white"}`} 
+                        onClick={() => setMenuSelect("media")}>Media</button>
+                        <button 
+                        className={`text-sm p-1 w-full rounded-t-xl ${menuSelect === "projects" && "bg-white"}`}
+                        onClick={() => setMenuSelect("projects")}
+                        >Projects</button>
+                    </div>
+                    <div className="flex flex-col w-full h-full">
+
+                        {menuSelect === "profile" &&
+                        <div>
+                            <div className="flex flex-row justify-between">
+                                <div className="flex flex-col gap-8 p-6">
+                                    <div>
+                                        <p className="text-xs">PIC Name</p>
+                                        <p className="text-sm">{v?.pic_name || "-"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs">Phone</p>
+                                        <p className="text-sm">{v?.phone || "-"}</p>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <p className="text-xs">Vendor Status</p>
+                                        <StatusPill statusLabel={v?.status || "-"} />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-baseline gap-4 pt-6 pr-8">
+                                    <div className="flex flex-col items-center p-2 gap-2">
+                                        <p className="text-xs">Services Area</p>
+                                        <div className="flex flex-row gap-2 overflow-x-scroll">
+                                            {v?.service_area?.map((s, id) => (
+                                                <p key={id} className="text-xs border rounded-4xl px-2">{s}</p>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <p className="text-xs">Provided Services</p>
+                                        {v?.supported_services.map((s, id) => (
+                                            <p key={id} className="text-xs pl-2">{s}</p>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                {v?.status === "pending" ?
+                                <div className="bg-amber-200 p-4 flex flex-row justify-center items-center gap-8">
+                                    <button>Reject</button>
+                                    <button
+                                    onClick={() => {
+                                        action.approvePending(v.user_id, v.id)
+                                        onClose()
+                                    }
+                                    }>Accept</button>
+                                </div> 
+                                :
+                                <div className="bg-amber-200 p-4 flex flex-row justify-center items-center gap-8">
+                                    <button>Contact</button>
+                                    <button>Edit</button>
+                                </div>
+                                }
+                            </div>
+
+                        </div>
+                        }
+
+                        {menuSelect === "media" &&
+                            <div className="p-4">
+                                <p className="text-xs">This user has not uploaded any Images/Files</p>
+                            </div>
+                        }
+
+
+                    </div>
+
+                <div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    )
+}
+
 export function VendorRegistrationList({
     vendors,
     unregisteredVendor,
     vendorsLoading,
     vendorsError,
+
+    patch,
 }) {
 
 
@@ -27,6 +145,16 @@ export function VendorRegistrationList({
     const [activeStatus, setActiveStatus] = useState("all_vendors");
     const [selectedVendor, setSelectedVendor] = useState(null);
 
+    const approvePending = (uid, vendorId) => {
+        patch("Users", uid, {
+            role: "vendor",
+            vendor_status: "registered",
+        });
+
+        patch("Vendors", vendorId, {
+            status: "idle",
+        });
+    }
 
     const filteredVendors = useMemo(() => {
         console.log("vendors", vendors);
@@ -75,6 +203,20 @@ export function VendorRegistrationList({
 
     return (
         <div className="mt-6 flex flex-row justify-between h-full px-4">
+
+
+            <Overlay
+                isOpen={selectedVendor}
+                onClose={() => setSelectedVendor(null)}
+                contentClassName="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+                "
+                >
+                <VendorProfile 
+                v={vendors.find((v) => v.id === selectedVendor)}
+                action={{approvePending}}
+                onClose={() => setSelectedVendor(null)}
+                />
+                </Overlay>
            
           <div className="w-full h-120">
           {/* FILTERs */}
@@ -136,7 +278,7 @@ export function VendorRegistrationList({
         
 
             {filteredVendors.map((v) => {
-                return <VendorList key={v.id} v={v} />
+                return <VendorList key={v.id} v={v} handleSelect={setSelectedVendor}/>
             } )}
     
           </div>

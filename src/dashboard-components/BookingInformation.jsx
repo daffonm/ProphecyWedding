@@ -3,10 +3,13 @@ import Image from "next/image";
 
 import { useDb } from "@/context/DbContext";
 import { useCollection } from "@/hooks/useCollection";
+import { useServicesByCodes, useVendorsByServiceCodes } from "@/hooks/useDocsByFields";
 
 import { formatRupiah } from "@/utils/format";
+import VendorAssignment from "./VendorAssigment";
 import StatusPill from "@/components/StatusPill";
 import Overlay from "@/components/Overlay";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 
 function formatDate(value) {
@@ -24,6 +27,13 @@ function formatTimestamp(ts) {
   }
 }
 
+function stableKey(arr) {
+  return (arr || []).filter(Boolean).join("|");
+}
+
+// Core Components
+
+
 
 export default function BookingInformation ({b, u, onClose, action}) {
 
@@ -36,6 +46,7 @@ export default function BookingInformation ({b, u, onClose, action}) {
         
         
         { label: "Package", value: b.package_info?.packageList || "-", needRevise: false },
+        // { label: "Package", value: b.package_info?.packageList || "-", needRevise: false },
         
         { label: "Venue", value: b.location_date_info?.venue || "-", needRevise: false },
         { label: "Guest Count", value: b.location_date_info?.guest_count || "-", needRevise: false },
@@ -49,13 +60,51 @@ export default function BookingInformation ({b, u, onClose, action}) {
     const getField = (field) => bookingFields.find((f) => f.label === field) || "field not found";
 
     const { query, where, colRef, limit } = useDb();
+
     const venueQuery = useMemo(() => {
         return () => query(colRef("Venues"), where("id", "==", getField("Venue").value), limit(1));
     }, [colRef, query, getField("Venue").value]);
     const { rows: venueRows, loading: venueLoading, error: venueError } = useCollection(venueQuery, [], { enabled: Boolean(getField("Venue").value) });
     const [venue] = venueRows;  
-  
+
+    const packageQuery =  useMemo(() => {
+        return () => query(colRef("Packages"), where("code", "==", b.package_info?.package_code), limit(1))
+        }, [colRef, query, getField("Package").value]);
+    
+    const { 
+        rows: packageRows, 
+        loading: packageLoading, 
+        error: packageError 
+    } = useCollection(packageQuery, [], { enabled: Boolean(getField("Package").value) });
+    const [pkg] = packageRows;
+
+    const serviceCodes =
+        b.package_info?.isCustom
+            ? b.package_info?.selected_services
+            : pkg?.included_services;
+
+    const {
+        rows: servicesRows,
+        loading: servicesLoading,
+        error: servicesError
+        } = useServicesByCodes(serviceCodes || [], { enabled: Boolean(serviceCodes?.length) });
+
+
+    const assignedVendorsQuery = useMemo(() => {
+        return () => query(colRef("vendor_assignments"), where("booking_id", "==", b.id))
+        }, [colRef, query, serviceCodes]);
+
+    const {
+        rows: assignedVendorsRows,
+        loading: assignedVendorsLoading,
+        error: assignedVendorsError
+        } = useCollection(assignedVendorsQuery, [], { enabled: Boolean(b?.id) });
+    const [assignedVendorsRow] = assignedVendorsRows;
+    
+        
+        
     const [toggleConfirmationPopup, setToggleConfirmationPopup] = useState(false);
+    const [toggleVendorAssignmentPopup, setToggleVendorAssigmentPopup] = useState(false);
    
 
     function VenueBox({v}) {
@@ -115,11 +164,11 @@ export default function BookingInformation ({b, u, onClose, action}) {
     return (
         <div className="">
 
-            {/* Pop Up Layer */}
+            {/* Pop Up Layers */}
             <Overlay 
             isOpen={toggleConfirmationPopup}
             onClose={() => setToggleConfirmationPopup(false)}
-            contentClassName = {"w-full h-full bg-white"}
+            contentClassName = {"absolute bg-white w-100 h-full right-0"}
             ><ConfirmationPopUp
                 title = {"Set up Invoice"}
                 text = {"Are you sure you want to set up invoice for this booking?"}
@@ -130,6 +179,22 @@ export default function BookingInformation ({b, u, onClose, action}) {
                     action.updateBooking(b.id, { invoice_setup: true })
                     setToggleConfirmationPopup(false)}}
                     /></Overlay>
+
+            <Overlay
+            isOpen={toggleVendorAssignmentPopup}
+            onClose={() => setToggleVendorAssigmentPopup(false)}
+            contentClassName="absolute bg-white w-285 h-full right-0 overflow-y-scroll p-8"
+            >
+                <VendorAssignment
+                    bookingId={b.id}
+                    requiredServiceCodes={serviceCodes || []}   // ✅ array string codes
+                    requiredServices={servicesRows || []}       // ✅ array object services
+                    eventCity={b.location_date_info?.city || null} // ✅ opsional
+                    onClose={() => setToggleVendorAssigmentPopup(false)}
+                    />
+            </Overlay>
+
+                    
 
             <div className="flex flex-row gap-4 w-full">
                 <button onClick={onClose}>X</button>
@@ -194,26 +259,62 @@ export default function BookingInformation ({b, u, onClose, action}) {
                         <h2>Package Information</h2>
                     </div>
                     {/* Content */}
-                    <div className="flex flex-col gap-6">
+                    <div className="flex flex-row justify-between">
+                        <div className="flex flex-col gap-6">
 
-                        <div>
-                            <p className="text-xs">Package Name</p>
-                            <p className="text-sm">
-                                {getField("Package").value}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-xs">Included Services</p>
-                            <p className="text-sm">
-                                {getField("Reservation Name").value}
-                            </p>
+                            <div>
+                                <p className="text-xs">Package Name</p>
+                                <p className="text-sm">
+                                    {getField("Package").value}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs">Included Services</p>
+                                <ul className="pl-2">
+                                    { servicesLoading? <LoadingSkeleton /> :
+                                        <ul>
+                                            {servicesRows.map((s) => (
+                                                <li key={s.id ?? s.code} className="text-xs">{s?.label}</li>
+                                            ))}
+                                        </ul>
+                                    }
+                                </ul>
+                            </div>
+
+
                         </div>
 
-                        <div className="mt-10">
-                            <button className="button1 w-40 text-sm">Assign a Vendor</button>
-                        </div>
-
+                        {assignedVendorsRow && (
+                            <div className="border p-4 rounded-xl flex flex-col w-132 justify-between">
+                                {assignedVendorsLoading? <LoadingSkeleton /> :
+                                    <div className="flex flex-col">
+                                        <div>
+                                            <h1 className="">Assigned Vendors</h1>
+                                                {assignedVendorsRow?.assigned_vendors.map((a) => (
+                                                <div key={a?.vendor_key} className="pl-2 flex flex-row justify-between">
+                                                    <p className="text-sm">{a?.vendor_name}</p>
+                                                    <p className="text-sm">{a?.assignment_status}</p>
+                                                </div>
+                                                ))}
+                                        </div>
+                                    </div>
+                                }
+                            <button
+                            onClick={() => setToggleVendorAssigmentPopup(true)}
+                            className="button1 w-40 text-sm">Edit Assignments</button>
+                            </div>
+                        )
+                        
+                        }
                     </div>
+
+                    {!assignedVendorsRow && 
+                    <div className="mt-10">
+                        <button
+                        onClick={() => setToggleVendorAssigmentPopup(true)}
+                        className="button1 w-40 text-sm">Assign a Vendor</button>
+                    </div>
+                    }
 
                 </div>
 
@@ -350,174 +451,3 @@ export default function BookingInformation ({b, u, onClose, action}) {
     )
 }
 
-// export default function BookingInformation ({b, u, setTogglePopUp}) {
-
-//     const name = b.customer_info?.name || "-";
-//     const phone = b.customer_info?.phone || "-";
-//     const bridegroom = b.customer_info?.bridegroom || "-";
-//     const bride = b.customer_info?.bride || "-";
-//     const venue = b.location_date_info?.venue || "-";
-//     const guestCount = b.location_date_info?.guestCount || "-";
-//     const date = formatDate(b.location_date_info?.date);
-//     const pkg = b.package_info?.packageList || "-";
-
-//     const paymentSystem = b.payment_info?.payment_system || "-";
-//     const paymentMethod = b.payment_info?.payment_method || "-";
-
-
-//     console.log(u);
-
-
-//     return (
-//         <div className="w-110 glassmorphism-pop rounded-xl p-8 h-full overflow-y-scroll">
-//             {/* Top */}
-//             <div>
-//                 <h2 className="text-xl">Booking Information</h2>
-//             </div>
-//             {/* Container */}
-//             <div className="flex flex-col gap-8">
-
-//                 {/* Customer Details */}
-//                 <div>
-//                     <div>
-//                         <h3 className="text-lg">Customer Details</h3>
-//                     </div>
-//                     <div className="flex flex-col gap-4">
-//                         <div className="flex flex-row">
-//                             <div className="flex flex-col w-100">
-//                                 <p className="text-xs">Email</p>
-//                                 <p>{u.email}</p>
-//                             </div>
-//                             <div className="flex flex-col items-end">
-//                                 <p className="text-xs">Contact</p>
-//                                 <p>{phone}</p>
-//                             </div>
-//                         </div>
-//                         <div className="flex flex-row">
-//                             <div className="flex flex-col w-100">
-//                                 <p className="text-xs">Username</p>
-//                                 <p>{u.username}</p>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-
-//                 {/* Reservation Details */}
-//                 <div>
-//                     <div>
-//                         <h3 className="text-lg">Reservation Details</h3>
-//                     </div>
-//                     <div className="flex flex-col gap-4">
-//                         <div className="flex flex-row">
-//                             <div className="flex flex-col w-100">
-//                                 <p className="text-xs">Reservation Name</p>
-//                                 <p>{name}</p>
-//                             </div>
-//                         </div>
-//                         <div className="flex flex-row justify-between">
-//                             <div className="flex flex-col">
-//                                 <p className="text-xs">Bridegroom</p>
-//                                 <p>{bridegroom}</p>
-//                             </div>
-//                             <div className="flex flex-col items-end">
-//                                 <p className="text-xs">Bride</p>
-//                                 <p>{bride}</p>
-//                             </div>
-//                         </div>
-//                         <div className="flex flex-row justify-between">
-//                             <div className="flex flex-col">
-//                                 <p className="text-xs">Created At</p>
-//                                 <p>{formatTimestamp(b.createdAt)}</p>
-//                             </div>
-//                             <div className="flex flex-col items-end">
-//                                 <p className="text-xs">Booking Status</p>
-//                                 <StatusPill status={b.bookingStatus} />
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-//                 {/* Package */}
-//                 <div>
-//                     <div>
-//                         <h3 className="text-lg">Package List</h3>
-//                     </div>
-//                     <div className="flex flex-col gap-4">
-//                         <div className="flex flex-row justify-between">
-//                             <div className="flex flex-col w-100">
-//                                 <p className="text-xs">Package</p>
-//                                 <p>{pkg}</p>
-//                             </div>
-//                         </div>
-//                         <div className="flex flex-row justify-between">
-//                             <div className="flex flex-col">
-//                                 <p className="text-xs">Package Details</p>
-//                                 <p>{"-"}</p>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-
-//                 {/* Date and Location */}
-//                 <div>
-//                     <div>
-//                         <h3 className="text-lg">Date & Location</h3>
-//                     </div>
-//                     <div className="flex flex-col gap-4">
-//                         <div className="flex flex-row justify-between">
-//                             <div className="flex flex-col">
-//                                 <p className="text-xs">Location / Venue</p>
-//                                 <p>{venue}</p>
-//                             </div>
-//                             <div className="flex flex-col items-end">
-//                                 <p className="text-xs">Est. Guest Count</p>
-//                                 <p>{guestCount}</p>
-//                             </div>
-//                         </div>
-                       
-//                         <div className="flex flex-row justify-between">
-//                             <div className="flex flex-col">
-//                                 <p className="text-xs">Book for Date</p>
-//                                 <p>{date}</p>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-
-//                 {/* Payment */}
-//                 <div>
-//                     <div>
-//                         <h3 className="text-lg">Payment</h3>
-//                     </div>
-//                     <div className="flex flex-col gap-4">
-//                         <div className="flex flex-row justify-between">
-//                             <div className="flex flex-col">
-//                                 <p className="text-xs">Payment System</p>
-//                                 <p>{paymentSystem}</p>
-//                             </div>
-//                             <div className="flex flex-col items-end">
-//                                 <p className="text-xs">Payment Method</p>
-//                                 <p>{paymentMethod}</p>
-//                             </div>
-//                         </div>
-         
-//                     </div>
-//                 </div>
-
-
-//             </div>
-
-//             {/* Action Buttons */}
-//             <div className="w-full mt-14">
-//                 { b.bookingStatus === "Pending" && (
-//                     <div className="flex flex-col w-full gap-4">
-//                         <button className="bg-emerald-500 text-white px-4 py-2 rounded">Accept & Reserve Date</button>
-//                         <button className="bg-white text-red-500 border border-red-500 px-4 py-2 rounded"
-//                         onClick={() => setTogglePopUp("RejectConfirmation")}
-//                         >
-//                         Reject This Booking</button>
-//                     </div>
-//                 )}
-//             </div>
-//         </div>
-//     )
-// }

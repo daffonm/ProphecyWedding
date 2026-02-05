@@ -7,6 +7,7 @@ import SideMenu from "@/dashboard-components/SideMenu";
 
 import BookingLists from "@/dashboard-components/BookingLists";
 import VendorManagement, { VendorRegistrationList } from "@/dashboard-components/VendorManagement";
+import RegisteredVenues from "@/dashboard-components/RegisteredVenues";
 
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
@@ -16,6 +17,16 @@ import { useUsersByIds } from "@/hooks/useUsersByIds";
 
 export default function AdminDashboard() {
   const { db, colRef, query, orderBy, serverTimestamp, updateDoc } = useDb();
+
+  // const usersQuery = useMemo(() => {
+  //   return () => query(colRef("Users"), orderBy("createdAt", "desc"));
+  // }, [colRef, query, orderBy]);
+  // const { users, loading: usersLoading, error: usersError } = useCollection(
+  //   usersQuery,
+  //   [],
+  //   { enabled: true }
+  // );
+
 
   const bookingQuery = useMemo(() => {
     return () => query(colRef("Bookings"), orderBy("createdAt", "desc"));
@@ -62,40 +73,28 @@ export default function AdminDashboard() {
     }
   }, [db]);
 
+  const patch = useCallback(async (col, id, patch) => {
+    if (!id) return;
+    setActionError(null);
+    setRowLoading(id, true);
+
+    try {
+    //  updateDoc(collection, id, data)
+      await updateDoc(col, id, {
+        ...patch,
+        updatedAt: serverTimestamp(),
+      });
+
+    } catch (e) {
+      console.error(`patch${col} error:`, e);
+      setActionError(e);
+    } finally {
+      setRowLoading(id, false);
+    }
+  }, [db]);
+
   // ====== BOOKING ACTIONS: TERIMA / TOLAK / DLL ======
-  // const acceptBooking = useCallback(async (bookingId) => {
-  //   await patchBooking(bookingId, {
-  //     bookingConfirmedByAdmin: true,
-  //     bookingStatus: "Accepted",
-  //     confirmedAt: serverTimestamp(),
   
-  //   });
-  // }, [patchBooking, db]);
-
-  // const rejectBooking = useCallback(async (bookingId, reason = "") => {
-  //   await patchBooking(bookingId, {
-  //     bookingConfirmedByAdmin: false,
-  //     bookingStatus: "Rejected",
-  //     rejectedAt: serverTimestamp(),
-  //     rejectReason: String(reason || "").trim(),
-   
-  //   });
-  // }, [patchBooking, db]);
-
-  // const markInProgress = useCallback(async (bookingId) => {
-  //   await patchBooking(bookingId, {
-  //     bookingStatus: "In Progress",
-   
-  //   });
-  // }, [patchBooking]);
-
-  // const markDone = useCallback(async (bookingId) => {
-  //   await patchBooking(bookingId, {
-  //     bookingStatus: "Completed",
-     
-  //   });
-  // }, [patchBooking, db]);
-
 
 
   // VENDORS MANAGEMENT ====================================
@@ -112,7 +111,16 @@ export default function AdminDashboard() {
     return vendors.filter((v) => v.status === "idle");
   }, [vendors]);
 
-
+  
+  // VENUES ====================================
+  const venueQuery = useMemo(() => {
+    return () => query(colRef("Venues"), orderBy("name", "asc"));
+  }, [colRef, query, orderBy]);
+  const {
+    rows: venues,
+    loading: venuesLoading,
+    error: venuesError,
+  } = useCollection(venueQuery, [], { enabled: true });
 
 
 
@@ -133,17 +141,22 @@ export default function AdminDashboard() {
         },
         sub: [
           { name: "Transactions", component: null, props: {}, parent: "Booking Lists" },
-          { name: "History", component: null, props: {}, parent: "Booking Lists" },
         ],
       },
       { name: "Customer Relations", component: null, props: {} },
       { name: "Resource Management", 
         component: VendorManagement, 
-        props: {},
+        props: {
+
+        },
         sub: [
+          { name: "Registered Venues", 
+            component: RegisteredVenues, 
+            props: {venues, venuesLoading, venuesError}, 
+            parent: "Resource Management" },     
           { name: "Vendor Listing", 
             component: VendorRegistrationList, 
-            props: {vendors, unregisteredVendor, vendorsLoading, vendorsError}, 
+            props: {vendors, unregisteredVendor, vendorsLoading, vendorsError, patch}, 
             parent: "Resource Management" },     
         ]},
     ],

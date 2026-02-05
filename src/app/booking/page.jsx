@@ -179,7 +179,7 @@ export default function BookingPage() {
 
     const id = idOverride || bookingId;
     if (!id) throw new Error("NO_BOOKING_ID");
-    console.log("updateBooking", id, partial);
+ 
     updateTotalEstimate()
     await setDoc(
         "Bookings",

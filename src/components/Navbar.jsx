@@ -139,7 +139,7 @@ export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const router = useRouter();
    
-    const { user, userDoc, role, loading, profileLoading } = useAuth();
+    const { user, userDoc, role, loading, profileLoading, error } = useAuth();
    
  
     
@@ -181,7 +181,7 @@ export default function Navbar() {
                         <LoadingSkeleton />
                     ) : user ? (
                         <div className="flex flex-row items-center gap-8">
-                          {!profileLoading && <p className="text-sm">{"Welcome, " + userDoc.username}</p>}
+                          {(!profileLoading && !error) && <p className="text-sm">{"Welcome, " + userDoc?.username}</p>}
                         <button className=" bg-gray-200 border-black p-2 rounded-full hover:bg-gray-200" 
                         onClick={() => setIsMenuOpen(!isMenuOpen)}>
                             <Image
