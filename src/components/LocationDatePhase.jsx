@@ -171,6 +171,7 @@ export default function LocationDatePhase({
       location_date_info: {
         venueSelectionMode: usePrivateVenue ? "private_reference" : "catalog",
         venue: usePrivateVenue ? "" : venue,
+        venue_code : usePrivateVenue ? "" : venue,
         privateVenue: usePrivateVenue
           ? {
               name: safeTrim(privateVenue.name),

@@ -83,3 +83,9 @@ export const vendorStatuses  = [
         { label: "Pending Approval", code:"pending",  color: "border border-yellow-500", textColor: "text-yellow-500" },
         { label: "Unavailable", code:"unavailable",  color: "border border-red-500", textColor: "text-red-500" },
     ]
+const assignmentStatuses = [
+    { label: "Assigned", color: "bg-yellow-500", textColor: "text-white"},
+    { label: "Approved", color: "bg-green-500", textColor: "text-white"},
+    { label: "Rejected", color: "bg-red-500", textColor: "text-white"},
+    { label: "On Project", color: "bg-blue-500", textColor: "text-white"},
+]
