@@ -11,6 +11,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { useChat } from "@/context/ChatContext";
+import ChatButton from "./sub-components/ChatButton";
+
+const ADMIN_UID = "aon0NufF1EXHfwuUFr9JKHmWNpG2"
 
 function AccountMenu({ onClose }) {
   const [activeTab, setActiveTab] = useState(null);
@@ -183,7 +186,7 @@ export default function Navbar() {
                         <div className="flex flex-row items-center gap-8">
                           {(!profileLoading && !error) && <p className="text-sm">{"Welcome, " + userDoc?.username}</p>}
 
-                          <button onClick={openChat}>Chat</button>
+                          <ChatButton targetUid={ADMIN_UID}/>
                           
                         <button className=" bg-gray-200 border-black p-2 rounded-full hover:bg-gray-200" 
                         onClick={() => setIsMenuOpen(!isMenuOpen)}>

@@ -7,6 +7,8 @@ import StatusPill from "./StatusPill";
 import LoadingSkeleton from "./LoadingSkeleton";
 import { useMemo } from "react";
 
+import { useChat } from "@/context/ChatContext";
+
 // Helper
 function formatDate(value) {
   if (!value) return "-";
@@ -23,11 +25,13 @@ function formatTimestamp(ts) {
   }
 }
 
+const ADMIN_UID = "aon0NufF1EXHfwuUFr9JKHmWNpG2"
+
 export default function CustomerBookingCard({b, toggleDetail}) {
     
 
     const { query, where, colRef, limit } = useDb();
-
+    const {openChatToUserId} = useChat()
 
     const packageName = b.package_info?.package_name;
     const date = b.location_date_info?.date;
@@ -90,7 +94,7 @@ export default function CustomerBookingCard({b, toggleDetail}) {
             {/* Card Footer */}
             <div className="flex flex-row justify-between bg-gray-100 border-t border-t-gray-400 p-4 px-5 h-15 items-center">
                 <button className="text-sm" onClick={toggleDetail}>View Booking</button>
-                <button className="w-20 text-sm bg-white border rounded-xl p-1">Contact</button>
+                <button className="w-25 text-sm bg-white border rounded-lg p-1" onClick={() => openChatToUserId(ADMIN_UID)}>Contact CS</button>
             </div>
         </div>
     )

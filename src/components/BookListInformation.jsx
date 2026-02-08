@@ -4,16 +4,35 @@ import { useCollection } from "@/hooks/useCollection";
 import { useDoc } from "@/hooks/useDoc";
 
 
-import {useState, useMemo} from "react"
+import {useState, useMemo, useCallback} from "react"
 import StatusPill from "./StatusPill";
 
-
+import { bookingStatuses, getBStatus } from "@/utils/status";
 
 
 export default function BookListInformation({b, onClose}) {
 
   
-    const { query, where, colRef, limit } = useDb();
+    const { db, query, where, colRef, limit, updateDoc, serverTimestamp } = useDb();
+
+    const patch = useCallback(async (col, id, patch) => {
+    if (!id) return;
+   
+    try {
+    //  updateDoc(collection, id, data)
+      await updateDoc(col, id, {
+        ...patch,
+        updatedAt: serverTimestamp(),
+      });
+
+    } catch (e) {
+      console.error(`patch${col} error:`, e);
+    //   setActionError(e);
+    } finally {
+    //   setRowLoading(id, false);
+    }
+  }, [db]);
+
 
     const reservationName = b.customer_info?.reservation_name;
     const primaryContactNumber = b.customer_info?.primary_contact_number;
@@ -60,11 +79,19 @@ export default function BookListInformation({b, onClose}) {
         window.open(`/invoices/${invoice?.id}`, "_blank")
     }
 
+    const onPaymentProceed = () => {
+        patch("Bookings", b.id, {
+            bookingStatus: "On Project"
+        })
+        patch("Invoices", invoice.id, {
+            payment_status: paymentMethod == "full"? "paid" : "half paid"
+        })
+    }
 
     return (
         <div className="p-2 pb-14">
             <div className="flex flex-row gap-4 items-center mb-10">
-                <ArrowButton onClick={onClose} cls="h-7 w-7"/>
+                <ArrowButton onClick={onClose} cls="h-5 w-5"/>
                 <p className="text-xl bold">{packageName}</p>
 
             </div>
@@ -151,16 +178,32 @@ export default function BookListInformation({b, onClose}) {
                 </div>
 
                 <div className="mt-16 flex flex-col gap-8">
-                    <div>
-                        <p className="text-sm">Booking Status</p>
+                    <div className="flex flex-col gap-1">
+                        <p className="text-sm flex flex-col">Booking Status</p>
                         <StatusPill  statusLabel={bookingStatus}/>
+                        <p className="mt-4" >{getBStatus(bookingStatus)}</p>
                     </div>
 
 
                     {bookingStatus === "Payment Due" &&
-                        <div>
-                            <button onClick={handleInvoice}>See Invoice</button>
-                            <button>Confirm Payment</button>
+                        <div className="flex flex-col gap-8">
+                            <button 
+                            className="w-50 "
+                            onClick={handleInvoice}>
+                                <div className="flex flex-row gap-2 items-center bg-gray-100 p-1 bd-6 rounded-full w-full">
+                                    <div className="w-10 h-10 p-2  bg-gray-200 rounded-full flex flex-row justify-center items-center">
+                                        <img  className="w-full h-full" src="/icons/icons8-file-blue.png" alt="" />
+                                    </div>
+                                    <p className="text-sm bold">invoice.pdf</p>
+                                </div>
+                                <p className="text-sm">click here to view document</p>
+                            </button>
+                            <div className="flex flex-col gap-4">
+                                <button 
+                                onClick={onPaymentProceed}
+                                className="button1 rounded-lg">Proceed to Payment</button>
+                                <button className="text-red-500 rounded-lg text-sm underline">Reject this Payment</button>
+                            </div>
                         </div>
                     
                     }

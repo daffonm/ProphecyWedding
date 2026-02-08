@@ -4,21 +4,21 @@ export const bookingStatuses = [
         value : "PENDING",
         color : "bg-yellow-500",
         textColor : "text-yellow-200",
-        desc: "Draft has been submitted for review by the admin. Please wait for approval"
+        desc: "Draft has been submitted for review by the admin"
     },
     {
         label : "On Review",
         value : "REVIEWing",
         color : "bg-orange-500",
         textColor : "text-yellow-200",
-        desc: "Admin Reviewing Draft"
+        desc: "Admin is reviewing your Draft"
     },
     {
         label : "Revision",
         value : "REVISION",
         color : "bg-pink-500",
         textColor : "text-pink-200",
-        desc: "Draft needs specific adjustments from customer"
+        desc: "Draft needs specific adjustments from the customer"
     },
 
     { // FINAL FIXING PRICES
@@ -26,7 +26,7 @@ export const bookingStatuses = [
         value : "QUOTATION",
         color : "bg-purple-500",
         textColor : "text-purple-200",
-        desc: "Admin is quotating draft"
+        desc: "Admin is finalizing the Prices and creating invoice"
     },
 
     {
@@ -34,14 +34,14 @@ export const bookingStatuses = [
         value : "PAYMENT",
         color : "bg-green-500",
         textColor : "text-green-200",
-        desc: "Admin is waiting for payment"
+        desc: "Waiting for customer's payment"
     },
     {
         label : "On Project",
         value : "PROJECT",
         color : "bg-blue-500",
         textColor : "text-blue-200",
-        desc: "Project is Running"
+        desc: "The project is running"
     },
     {
         label : "Completed",
@@ -74,6 +74,8 @@ export const paymentStatuses = [
     },
 
 ]
+
+export const getBStatus = (st) => bookingStatuses.map((s) => s.label === st && s.desc)
 
 export const vendorStatuses  = [
         // { label: "All Vendors", code:"all_vendors", color: "bg-emerald-500", textColor: "text-white" },
