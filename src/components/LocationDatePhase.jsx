@@ -206,7 +206,7 @@ export default function LocationDatePhase({
               <div className="flex flex-col gap-2">
                 <p className="text-sm">Event Date</p>
                 <input
-                  className="bd rounded-lg p-2 w-50 outline-0"
+                  className="bd rounded-lg p-2 w-50 outline-0 bg-white"
                   type="date"
                   value={weddingDate}
                   onChange={(e) => setWeddingDate(e.target.value)}
@@ -217,7 +217,7 @@ export default function LocationDatePhase({
               <div className="flex flex-col gap-2">
                 <p className="text-sm">Wedding Type</p>
                 <select
-                  className="bd rounded-lg p-2 w-80 outline-0"
+                  className="bd rounded-lg p-2 w-80 outline-0 bg-white"
                   value={weddingType || "Traditional"}
                   onChange={(e) => setWeddingType(e.target.value)}
                 >
@@ -243,7 +243,7 @@ export default function LocationDatePhase({
 
               <div className="flex flex-row gap-40 items-center">
                 <input
-                  className="bd rounded-lg p-2 w-50 outline-0"
+                  className="bd rounded-lg p-2 w-50 outline-0 bg-white"
                   type="number"
                   value={normalizedGuest}
                   onChange={(e) => setGuestCount(e.target.value)}

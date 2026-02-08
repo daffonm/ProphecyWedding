@@ -64,7 +64,7 @@ export default function BookingConfirmationPhase({
       packageName: safe(packageInfo.package_name || packageInfo.packageList || packageInfo.package_list),
       packageCode: safe(packageInfo.package_code),
       isCustom: Boolean(packageInfo.isCustom),
-      selectedServices: Array.isArray(packageInfo.selected_services)
+      selectedServices: Array.isArray(packageInfo.selected_services_codes)
         ? packageInfo.selected_services
         : Array.isArray(packageInfo.selectedServices)
         ? packageInfo.selectedServices

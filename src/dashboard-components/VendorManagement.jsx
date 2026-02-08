@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { vendorStatuses } from "@/utils/status";
 
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import LoadingCircle from "@/components/AssignmentStatus";
 import StatusPill from "@/components/StatusPill";
 
 import Overlay from "@/components/Overlay";

@@ -11,12 +11,29 @@ import RegisteredVenues from "@/dashboard-components/RegisteredVenues";
 
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
+import { useAuth } from "@/context/AuthContext";
 import { useDb } from "@/context/DbContext";
 import { useCollection } from "@/hooks/useCollection";
 import { useUsersByIds } from "@/hooks/useUsersByIds";
+import { useRouter } from "next/navigation";
+
+import { useChat } from "@/context/ChatContext";
+
+import ChatButton from "@/components/sub-components/ChatButton";
 
 export default function AdminDashboard() {
   const { db, colRef, query, orderBy, serverTimestamp, updateDoc } = useDb();
+  const router = useRouter()
+
+  const { user, authLoading, profileLoading, logout } = useAuth();
+
+  const onLogOut = () => {
+    // if  (!user) return;
+    // if (authLoading || profileLoading) return;
+
+    logout();
+    router.push("/");
+  }
 
   // const usersQuery = useMemo(() => {
   //   return () => query(colRef("Users"), orderBy("createdAt", "desc"));
@@ -26,7 +43,7 @@ export default function AdminDashboard() {
   //   [],
   //   { enabled: true }
   // );
-
+  const { openChat, closeChat, openChatToUserId } = useChat()
 
   const bookingQuery = useMemo(() => {
     return () => query(colRef("Bookings"), orderBy("createdAt", "desc"));
@@ -191,6 +208,7 @@ export default function AdminDashboard() {
           setActiveMenu={setActiveMenu}
           setActiveSubMenu={setActiveSubMenu}
           sideMenu={sideMenu}
+          logOut = {onLogOut}
         />
 
         <div className="p-4 w-full">
@@ -201,9 +219,11 @@ export default function AdminDashboard() {
                 {activeTitle}
               </h1>
             </div>
+
             <div>
-              <div>Profile Icon</div>
+              <ChatButton />
             </div>
+
           </div>
 
           {ActiveMenuComponent ? (

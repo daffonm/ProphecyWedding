@@ -12,6 +12,25 @@ function safeTrim(v) {
   return String(v ?? "").trim();
 }
 
+const buildSelectedServices = (codes, allServices) => {
+  const safeCodes = Array.isArray(codes) ? codes.filter(Boolean) : [];
+  const map = new Map((allServices || []).map((s) => [s.code, s]));
+
+  // keep ordering sesuai codes
+  return safeCodes.map((code) => {
+    const s = map.get(code);
+
+    // snapshot minimal tapi berguna untuk query dan render
+    return {
+      code,
+      name: s?.name || s?.label || "",
+      category: s?.category || "",
+      price: Number(s?.price ?? s?.unit_price ?? s?.base_price ?? 0),
+    };
+  });
+};
+
+
 export default function PackagePhase({
   packages,
   packagesLoading,
@@ -177,16 +196,24 @@ export default function PackagePhase({
     if (msg) return onNext({ ok: false, message: msg });
 
     const isCustom = selectedPkg === "CUSTOM";
+    const selectedPkgDoc = packages.find((p) => p.code === selectedPkg);
 
-    // 🔥 kirim payload selected booking + checked services
+    const serviceCodes = isCustom
+      ? addOns
+      : (selectedPkgDoc?.included_services || []);
+
+    const selectedServices = buildSelectedServices(serviceCodes, allServices);
+
     await onNext({
       ok: true,
       selectedPkgCode: selectedPkg,
-      selectedPkgName: packageList, // ini sudah kamu set saat select
+      selectedPkgName: packageList,
       isCustom,
-      checkedServiceCodes: isCustom ? addOns : [],
+      checkedServiceCodes: serviceCodes, // sekarang selalu terisi
+      selectedServices,                  // NEW: selalu terisi
     });
-  };
+};
+
 
   return (
     <div className="h-full w-full flex flex-col justify-between min-h-0">
@@ -222,7 +249,7 @@ export default function PackagePhase({
                 return (
                   <div
                     key={id}
-                    className={(isSelected ? "bd" : "bd-2") + " " + pkgStyle}
+                    className={(isSelected ? "bd" : "bd-2") + " " + pkgStyle + " bg-white"}
                   >
                     {/* BASE AREA */}
                     <div className={"flex flex-col justify-between " + baseHeightClass + " pt-20 pb-10"}>

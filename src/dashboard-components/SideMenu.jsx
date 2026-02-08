@@ -64,6 +64,7 @@ export default function SideMenu({
   sideMenu,
 
   dashboardName = "Prophecy Wedding",
+  logOut
 }) {
   const handleMenuClick = (menuName) => {
     // Klik menu utama lain -> pindah parent + tutup branch sebelumnya + reset sub
@@ -99,7 +100,10 @@ export default function SideMenu({
       </div>
 
       <div>
-        <button className="rounded-2xl px-4 py-2 transition-all duration-300 ease-in-out hover:bg-emerald-500/10">
+        <button 
+        className="rounded-2xl px-4 py-2 transition-all duration-300 ease-in-out hover:bg-emerald-500/10"
+        onClick={logOut}
+        >
           Logout
         </button>
       </div>

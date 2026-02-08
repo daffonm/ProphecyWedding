@@ -23,7 +23,7 @@ function formatTimestamp(ts) {
   }
 }
 
-export default function CustomerBookingCard({b}) {
+export default function CustomerBookingCard({b, toggleDetail}) {
     
 
     const { query, where, colRef, limit } = useDb();
@@ -89,7 +89,7 @@ export default function CustomerBookingCard({b}) {
 
             {/* Card Footer */}
             <div className="flex flex-row justify-between bg-gray-100 border-t border-t-gray-400 p-4 px-5 h-15 items-center">
-                <button className="text-sm">View Booking</button>
+                <button className="text-sm" onClick={toggleDetail}>View Booking</button>
                 <button className="w-20 text-sm bg-white border rounded-xl p-1">Contact</button>
             </div>
         </div>

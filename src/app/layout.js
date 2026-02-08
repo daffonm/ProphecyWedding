@@ -3,6 +3,7 @@ import "../styles/component.css";
 import "../styles/animation.css";
 import AuthProvider from "../context/AuthContext";
 import DbProvider from "@/context/DbContext";
+import ChatProvider from "@/context/ChatContext";
 
 export const metadata = {
   title: "Prophecy Wedding",
@@ -21,7 +22,9 @@ export default function RootLayout({ children }) {
       <body className="">
         <AuthProvider>
           <DbProvider>
-            {children}
+            <ChatProvider>
+              {children}
+            </ChatProvider>
           </DbProvider>
         </AuthProvider>
       </body>

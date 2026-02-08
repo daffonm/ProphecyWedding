@@ -7,6 +7,7 @@ import { useDb } from "@/context/DbContext";
 import { useCollection } from "@/hooks/useCollection";
 
 import CustomerBookingCard from "./CustomerBookingCard";
+import BookListInformation from "./BookListInformation";
 
 function formatDateMaybe(v) {
   // kalau Firestore Timestamp: v?.toDate()
@@ -27,13 +28,6 @@ function formatDateMaybe(v) {
   }
 }
 
-function Badge({ children }) {
-  return (
-    <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs text-gray-700">
-      {children}
-    </span>
-  );
-}
 
 export default function MyBookList() {
   const { user, loading: authLoading } = useAuth();
@@ -53,24 +47,7 @@ export default function MyBookList() {
   } = useCollection(bookQuery, [], { enabled });
 
  
-
-  // const { rows: bookings, loading, error } = useCollection(
-  //   () => {
-  //     if (!enabled) return null;
-
-  //     // Query: Bookings milik user ini, urut terbaru
-  //     // Catatan: where + orderBy bisa butuh index di Firestore Console kalau diminta.
-  //     return db.query(
-  //       db.colRef("Bookings"),
-  //       db.where("customer_id", "==", user.uid),
-  //       db.orderBy("createdAt", "desc"),
-  //       db.limit(50)
-  //     );
-  //   },
-  //   [enabled, user?.uid],
-  //   { enabled }
-  // );
-
+  const [toggleBook, setToggleBook] = useState(null)
 
 
   if (authLoading) return <LoadingSkeleton />;
@@ -84,28 +61,37 @@ export default function MyBookList() {
   }
 
   return (
-    <div className="space-y-4 overflow-y-scroll p-4 h-168">
-      <div>
-        <h2 className="text-lg font-semibold">My BookList</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Daftar booking yang pernah kamu buat.
-        </p>
+    <div className="space-y-4 overflow-y-scroll h-168">
+    {loading ? <LoadingSkeleton /> :
+    !toggleBook? 
+      <div className="p-4">
+
+          <div>
+            <h2 className="text-lg font-semibold">My BookList</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Daftar booking yang pernah kamu buat.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-8 mt-8">
+           
+            {bookings.length === 0 ? (
+              <div className="text-sm text-gray-500">Belum ada booking.</div>) :
+              bookings.map((b) => (
+                <CustomerBookingCard key={b.id} b={b} toggleDetail={() => setToggleBook(b.id)}/>
+              ))}
+            
+          </div>
+
+          {error && <div className="text-red-600">{error}</div>}
       </div>
 
-    <div className="flex flex-col gap-8 mt-8">
-      {loading ? (
-        <LoadingSkeleton />) : 
-      bookings.length === 0 ? (
-        <div className="text-sm text-gray-500">Belum ada booking.</div>) :
-        bookings.map((b) => (
-          <CustomerBookingCard key={b.id} b={b}/>
-        ))
+     
+        :
+        <BookListInformation b={bookings.find((b) => b.id === toggleBook)} onClose={() =>{
+          setToggleBook(null)
+        }}/>  
       }
-     
-    </div>
-      {error && <div className="text-red-600">{error}</div>}
-
-     
       
     </div>
   );

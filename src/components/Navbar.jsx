@@ -10,7 +10,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { useDoc } from "@/hooks/useDoc";
+import { useChat } from "@/context/ChatContext";
 
 function AccountMenu({ onClose }) {
   const [activeTab, setActiveTab] = useState(null);
@@ -141,7 +141,7 @@ export default function Navbar() {
    
     const { user, userDoc, role, loading, profileLoading, error } = useAuth();
    
- 
+    const { openChat, closeChat, openChatToUserId } = useChat()
     
     const navigateVendor = () => {
         if (role === "vendor") {
@@ -182,6 +182,9 @@ export default function Navbar() {
                     ) : user ? (
                         <div className="flex flex-row items-center gap-8">
                           {(!profileLoading && !error) && <p className="text-sm">{"Welcome, " + userDoc?.username}</p>}
+
+                          <button onClick={openChat}>Chat</button>
+                          
                         <button className=" bg-gray-200 border-black p-2 rounded-full hover:bg-gray-200" 
                         onClick={() => setIsMenuOpen(!isMenuOpen)}>
                             <Image

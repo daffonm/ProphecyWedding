@@ -93,10 +93,12 @@ export default function FirestoreSeederPage() {
 
       // Example: Existing collection "Bookings"
       // - Use addDoc if you want auto document IDs
+
       Vendors : {
         mode: "addDoc",
         docs: VENDORS,
       },
+
 
 
 

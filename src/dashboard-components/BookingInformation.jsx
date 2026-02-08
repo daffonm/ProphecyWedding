@@ -10,6 +10,7 @@ import VendorAssignment from "./VendorAssigment";
 import StatusPill from "@/components/StatusPill";
 import Overlay from "@/components/Overlay";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import Invoicement from "./Invoicement";
 
 
 function formatDate(value) {
@@ -101,7 +102,7 @@ export default function BookingInformation ({b, u, onClose, action}) {
         } = useCollection(assignedVendorsQuery, [], { enabled: Boolean(b?.id) });
     const [assignedVendorsRow] = assignedVendorsRows;
     
-        
+    const [toggleInvoice, setToggleInvoice] = useState(false);
         
     const [toggleConfirmationPopup, setToggleConfirmationPopup] = useState(false);
     const [toggleVendorAssignmentPopup, setToggleVendorAssigmentPopup] = useState(false);
@@ -144,8 +145,8 @@ export default function BookingInformation ({b, u, onClose, action}) {
             <div className="p-8">
                 <div className="flex flex-col justify-center items-center gap-2">
                     <h2>{title}</h2>
-                    <p className="text-sm">{text}</p>
-                    <p className="text-xs">{subtext}</p>
+                    <p className="text-sm text-center flex flex-row items-center justify-center">{text}</p>
+                    <p className="text-xs text-center">{subtext}</p>
                 </div>
                 <div className="flex flex-row justify-center gap-4 mt-4">
                     <button
@@ -159,7 +160,7 @@ export default function BookingInformation ({b, u, onClose, action}) {
         )
     }
     
-
+    
 
     return (
         <div className="">
@@ -168,22 +169,24 @@ export default function BookingInformation ({b, u, onClose, action}) {
             <Overlay 
             isOpen={toggleConfirmationPopup}
             onClose={() => setToggleConfirmationPopup(false)}
-            contentClassName = {"absolute bg-white w-100 h-full right-0"}
+            contentClassName = {"absolute bg-white w-100 habsolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
             ><ConfirmationPopUp
                 title = {"Set up Invoice"}
                 text = {"Are you sure you want to set up invoice for this booking?"}
-                subtext = {" *this will mark the booking status into Quotation"}
+                subtext = {" *this will mark the booking status into Quotation, you will no longer be able to edit Assignments. All vendor assignment will be saved and pending request will automatically canceled."}
                 onClose = {() => setToggleConfirmationPopup(false)}
                 onConfitrm = {() => {
                     action.updateBookingStatus(b.id, "Quotation")
                     action.updateBooking(b.id, { invoice_setup: true })
-                    setToggleConfirmationPopup(false)}}
+                    setToggleConfirmationPopup(false)
+                    setToggleInvoice(true)
+                }}
                     /></Overlay>
 
             <Overlay
             isOpen={toggleVendorAssignmentPopup}
             onClose={() => setToggleVendorAssigmentPopup(false)}
-            contentClassName="absolute bg-white w-285 h-full right-0 overflow-y-scroll p-8"
+            contentClassName="absolute bg-gray-50 w-full h-full right-0"
             >
                 <VendorAssignment
                     bookingId={b.id}
@@ -273,8 +276,8 @@ export default function BookingInformation ({b, u, onClose, action}) {
                                 <ul className="pl-2">
                                     { servicesLoading? <LoadingSkeleton /> :
                                         <ul>
-                                            {servicesRows.map((s) => (
-                                                <li key={s.id ?? s.code} className="text-xs">{s?.label}</li>
+                                            {servicesRows.map((s, idx) => (
+                                                <li key={`${s.id ?? s.code}::${idx}`} className="text-xs">{s?.label}</li>
                                             ))}
                                         </ul>
                                     }
@@ -290,12 +293,14 @@ export default function BookingInformation ({b, u, onClose, action}) {
                                     <div className="flex flex-col">
                                         <div>
                                             <h1 className="">Assigned Vendors</h1>
-                                                {assignedVendorsRow?.assigned_vendors.map((a) => (
-                                                <div key={a?.vendor_key} className="pl-2 flex flex-row justify-between">
+                                                {assignedVendorsRow?.assigned_vendors.map((a, idx) => {
+                                                    // console.log(a)
+                                                    return (
+                                                <div key={`${a?.vendor_key || "vendor"}::${a?.service_code || a?.serviceCode || "svc"}::${idx}`} className="pl-2 flex flex-row justify-between">
                                                     <p className="text-sm">{a?.vendor_name}</p>
                                                     <p className="text-sm">{a?.assignment_status}</p>
                                                 </div>
-                                                ))}
+                                                )})}
                                         </div>
                                     </div>
                                 }
@@ -406,45 +411,9 @@ export default function BookingInformation ({b, u, onClose, action}) {
 
                 </div>
 
-                { b?.invoice_setup && 
-                    <div className="glassmorphism-pop p-6 rounded-xl">
-                    <div>
-                        <h2>Payment Details</h2>
-                    </div>
-                    {/* Content */}
-                    <div className="flex flex-col gap-6">
-                        
-                        <div className="flex flex-row gap-60">
-                            <div>
-                                <p className="text-xs">Payment System</p>
-                                <p className="text-sm">
-                                    {getField("Payment System").value}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-xs">Payment Method</p>
-                                <p className="text-sm">
-                                    {getField("Payment Method").value}
-                                </p>
-                            </div>
-
-                        </div>
-                        
-                        <div>
-                            <div>
-                                <p className="text-xs">Estimated Total Price</p>
-                                <p className="text-sm">
-                                    {formatRupiah(getField("Estimated Total Price").value)}
-                                </p>
-                            </div>
-                            <button
-                            onClick={() => setToggleConfirmationPopup(true)}
-                            className="button1"
-                            >Set up Invoice</button>
-                        </div>
-                 </div>
-
-                </div>}
+                { toggleInvoice && 
+                    <Invoicement booking={b} venue={venue} updateBstatus={() => action.updateBookingStatus(b.id, "Payment Due")}/>
+                }
 
             </div>
         </div>

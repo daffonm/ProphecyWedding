@@ -121,6 +121,16 @@ export default function BookingPage() {
   const [groomName, setGroomName] = useState("");
   const [brideName, setBrideName] = useState("");
 
+    // NEW fields (customer)
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+
+  // NEW fields (payment)
+  const [paymentAccount, setPaymentAccount] = useState("");
+  const [paymentAccountName, setPaymentAccountName] = useState("");
+  const [paymentAccountNumber, setPaymentAccountNumber] = useState("");
+
+
   // PAYMENT INFO STATES
   const [paymentSystem, setPaymentSystem] = useState("dp50");
   const [paymentMethod, setPaymentMethod] = useState("Bank Transfer");
@@ -219,6 +229,9 @@ export default function BookingPage() {
         primary_contact_number: "",
         groom_name: "",
         bride_name: "",
+
+        city: "", // NEW
+        address : "", // NEW
       },
       location_date_info: {
         venue: "",
@@ -231,6 +244,10 @@ export default function BookingPage() {
       payment_info: {
         payment_system: "",
         payment_method: "",
+
+        account: "", // NEW
+        account_name: "", // NEW
+        account_number: "", // NEW
       },
       package_info: {
         package_list: packageList || "basic",
@@ -265,6 +282,13 @@ export default function BookingPage() {
     setPrimaryContactNumber("");
     setGroomName("");
     setBrideName("");
+    
+    setCustomerCity("");
+    setCustomerAddress("");
+
+    setPaymentAccount("");
+    setPaymentAccountName("");
+    setPaymentAccountNumber("");
 
     setPaymentSystem("dp50");
     setPaymentMethod("Bank Transfer");
@@ -327,13 +351,24 @@ export default function BookingPage() {
           }
         );
 
-        setReservationName(b.reservation_details?.reservation_name || "");
-        setPrimaryContactNumber(b.reservation_details?.primary_contact_number || "");
-        setGroomName(b.reservation_details?.groom_name || "");
-        setBrideName(b.reservation_details?.bride_name || "");
+        setReservationName(b.customer_info?.reservation_name || "");
+        setPrimaryContactNumber(b.customer_info?.primary_contact_number || "");
+        setGroomName(b.customer_info?.groom_name || "");
+        setBrideName(b.customer_info?.bride_name || "");
 
+        // NEW (customer)
+        setCustomerCity(b.customer_info?.city || "");
+        setCustomerAddress(b.customer_info?.address || "");
+
+        // payment existing
         setPaymentSystem(b.payment_info?.payment_system || "dp50");
         setPaymentMethod(b.payment_info?.payment_method || "Bank Transfer");
+
+        // NEW (payment)
+        setPaymentAccount(b.payment_info?.account || "");
+        setPaymentAccountName(b.payment_info?.account_name || "");
+        setPaymentAccountNumber(b.payment_info?.account_number || "");
+
       },
       (err) => {
         console.error("Booking resume listener error:", err);
@@ -353,6 +388,8 @@ export default function BookingPage() {
   selectedPkgName,
   isCustom,
   checkedServiceCodes,
+
+  selectedServices
 }) => {
   if (!ok) return setError(message || "Phase 1 invalid.");
 
@@ -362,25 +399,37 @@ export default function BookingPage() {
     if (codes.length < 1) return setError("Custom package wajib pilih minimal 1 service.");
   }
 
+  const codes = Array.isArray(checkedServiceCodes) ? checkedServiceCodes : [];
+  const resolved = Array.isArray(selectedServices) ? selectedServices : [];
+
+  if (codes.length < 1) return setError("Custom package wajib pilih minimal 1 service.");
+  if (resolved.length < 1) return setError("Selected services gagal dibentuk. Coba ulang pilih service.");
+
+
   setError("");
 
   const id = await createDraftIfNeeded(); // simpan id dari sini
   if (!id) return;
 
-  await updateBooking(
-    {
-      bookingPhase: 2,
-      package_info: {
-        packageList, // tetap pakai state yang kamu set di PackagePhase saat select
-        package_code: selectedPkgCode || "",
-        isCustom: Boolean(isCustom),
-        selected_services: Array.isArray(checkedServiceCodes) ? checkedServiceCodes : [],
-        // optional (kalau kamu mau simpan display name terpisah)
-        package_name: selectedPkgName || packageList || "",
-      },
+await updateBooking(
+  {
+    bookingPhase: 2,
+    package_info: {
+      packageList,
+      package_code: selectedPkgCode || "",
+      isCustom: Boolean(isCustom),
+
+      // optional: simpan codes untuk query array-contains kalau kamu mau
+      selected_service_codes: codes,
+
+      // ini yang kamu mau: resolved snapshot (no join lagi untuk render/invoice)
+      selected_services: resolved,
+
+      package_name: selectedPkgName || packageList || "",
     },
-    id
-  );
+  },
+  id
+);
 
   setBookingPhase(2);
 };
@@ -425,21 +474,33 @@ export default function BookingPage() {
     setError("");
     await createDraftIfNeeded();
 
-    const info = draft?.reservation_details;
+    const info = draft?.reservation_details || draft?.customer_info || draft || {}
 
     await updateBooking({
       bookingPhase: 4,
       customer_info: {
-        reservation_name: safeTrim(info?.customer?.reservationName ?? reservationName),
-        primary_contact_number: safeTrim(info?.customer?.primaryContactNumber ?? primaryContactNumber),
-        groom_name: safeTrim(info?.customer?.groom_name ?? groomName),
-        bride_name: safeTrim(info?.customer?.bride_name ?? brideName),
+        reservation_name: safeTrim(info?.customer?.reservationName ?? info?.reservation_name ?? reservationName),
+        primary_contact_number: safeTrim(info?.customer?.primaryContactNumber ?? info?.primary_contact_number ?? primaryContactNumber),
+        groom_name: safeTrim(info?.customer?.groom_name ?? info?.groom_name ?? groomName),
+        bride_name: safeTrim(info?.customer?.bride_name ?? info?.bride_name ?? brideName),
+
+        // NEW keep
+        city: safeTrim(info?.customer?.city ?? info?.city ?? customerCity),
+        address: safeTrim(info?.customer?.address ?? info?.address ?? customerAddress),
       },
       payment_info: {
-        payment_system: info?.payment?.payment_system ?? paymentSystem,
-        payment_method: info?.payment?.payment_method ?? paymentMethod,
+        payment_system: info?.payment?.payment_system ?? info?.payment_system ?? paymentSystem,
+        payment_method: info?.payment?.payment_method ?? info?.payment_method ?? paymentMethod,
+
+        // NEW keep
+        account: safeTrim(info?.payment?.account ?? info?.account ?? paymentAccount),
+        account_name: safeTrim(info?.payment?.account_name ?? info?.account_name ?? paymentAccountName),
+        account_number: safeTrim(info?.payment?.account_number ?? info?.account_number ?? paymentAccountNumber),
       },
-    });
+    })
+
+
+    
 
     setBookingPhase(4);
   };
@@ -474,9 +535,9 @@ export default function BookingPage() {
   // Render by phase
   // =========================
   return (
-    <div className="flex flex-row">
+    <div className="flex flex-row ungu">
       <div className="
-      bg-[url(/web-images/booking-bg.jpg)]
+      bg-[url(/web-images/booking-bg`.jpg)]
       bg-center
       bg-linear-to-r from-green-200 to-green-900
       bg-amber-200 h-screen w-120">
@@ -533,14 +594,31 @@ export default function BookingPage() {
             setGroomName={setGroomName}
             brideName={brideName}
             setBrideName={setBrideName}
+
+            // NEW (customer)
+            customerCity={customerCity}
+            setCustomerCity={setCustomerCity}
+            customerAddress={customerAddress}
+            setCustomerAddress={setCustomerAddress}
+
             paymentSystem={paymentSystem}
             setPaymentSystem={setPaymentSystem}
             paymentMethod={paymentMethod}
             setPaymentMethod={setPaymentMethod}
+
+            // NEW (payment)
+            paymentAccount={paymentAccount}
+            setPaymentAccount={setPaymentAccount}
+            paymentAccountName={paymentAccountName}
+            setPaymentAccountName={setPaymentAccountName}
+            paymentAccountNumber={paymentAccountNumber}
+            setPaymentAccountNumber={setPaymentAccountNumber}
+
             onBack={() => setBookingPhase(2)}
             onNext={onPhase3Next}
             error={error}
           />
+
         )}
 
         {bookingPhase === 4 && (

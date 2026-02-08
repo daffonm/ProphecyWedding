@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { formatRupiah } from "@/utils/format";
 
 function safeTrim(v) {
   return String(v ?? "").trim();
@@ -18,13 +17,25 @@ export default function ReservationDetailsPhase({
   brideName,
   setBrideName,
 
+  // NEW Customer Fields
+  customerCity,
+  setCustomerCity,
+  customerAddress,
+  setCustomerAddress,
+
+  // NEW Payment Fields
+  paymentAccount,
+  setPaymentAccount,
+  paymentAccountName,
+  setPaymentAccountName,
+  paymentAccountNumber,
+  setPaymentAccountNumber,
+
   // Payment Details
   paymentSystem,
   setPaymentSystem,
   paymentMethod,
   setPaymentMethod,
-
-
 
   onBack,
   onNext,
@@ -41,8 +52,21 @@ export default function ReservationDetailsPhase({
     if (!safeTrim(primaryContactNumber)) return "Primary contact number is required.";
     if (!safeTrim(groomName)) return "Groom name is required.";
     if (!safeTrim(brideName)) return "Bride name is required.";
+
+    // NEW
+    if (!safeTrim(customerCity)) return "City is required.";
+    if (!safeTrim(customerAddress)) return "Address is required.";
+
     if (!safeTrim(paymentSystem)) return "Please select a payment System.";
     if (!safeTrim(paymentMethod)) return "Please select a payment method.";
+
+    // NEW: bank fields mandatory only when Bank Transfer
+    if (safeTrim(paymentMethod) === "Bank Transfer") {
+      if (!safeTrim(paymentAccount)) return "Bank name is required for Bank Transfer.";
+      if (!safeTrim(paymentAccountName)) return "Account name is required for Bank Transfer.";
+      if (!safeTrim(paymentAccountNumber)) return "Account number is required for Bank Transfer.";
+    }
+
     return "";
   };
 
@@ -57,10 +81,17 @@ export default function ReservationDetailsPhase({
           primary_contact_number: safeTrim(primaryContactNumber),
           groom_name: safeTrim(groomName),
           bride_name: safeTrim(brideName),
+
+          city: safeTrim(customerCity), // NEW
+          address: safeTrim(customerAddress), // NEW
         },
         payment: {
           payment_system: safeTrim(paymentSystem), // dp50 | full
           payment_method: safeTrim(paymentMethod),
+
+          account: safeTrim(paymentAccount), // NEW
+          account_name: safeTrim(paymentAccountName), // NEW
+          account_number: safeTrim(paymentAccountNumber), // NEW
         },
       },
     };
@@ -98,7 +129,7 @@ export default function ReservationDetailsPhase({
               <div className="flex flex-col gap-2">
                 <p className="text-sm">Primary Contact Number</p>
                 <input
-                  className="bd rounded-lg p-2 w-80 outline-0"
+                  className="bd rounded-lg p-2 w-80 outline-0 bg-white"
                   type="text"
                   value={primaryContactNumber}
                   onChange={(e) => setPrimaryContactNumber(e.target.value)}
@@ -111,7 +142,7 @@ export default function ReservationDetailsPhase({
               <div className="flex flex-col gap-2">
                 <p className="text-sm">Groom Name</p>
                 <input
-                  className="bd rounded-lg p-2 w-80 outline-0"
+                  className="bd rounded-lg p-2 w-80 outline-0 bg-white"
                   type="text"
                   value={groomName}
                   onChange={(e) => setGroomName(e.target.value)}
@@ -122,11 +153,36 @@ export default function ReservationDetailsPhase({
               <div className="flex flex-col gap-2">
                 <p className="text-sm">Bride Name</p>
                 <input
-                  className="bd rounded-lg p-2 w-80 outline-0"
+                  className="bd rounded-lg p-2 w-80 outline-0 bg-white"
                   type="text"
                   value={brideName}
                   onChange={(e) => setBrideName(e.target.value)}
                   placeholder="Enter bride name"
+                />
+              </div>
+            </div>
+
+            {/* NEW row */}
+            <div className="flex flex-row gap-40 items-center">
+              <div className="flex flex-col gap-2">
+                <p className="text-sm">City</p>
+                <input
+                  className="bd rounded-lg p-2 w-80 outline-0 bg-white"
+                  type="text"
+                  value={customerCity}
+                  onChange={(e) => setCustomerCity(e.target.value)}
+                  placeholder="Enter city"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <p className="text-sm">Address</p>
+                <input
+                  className="bd rounded-lg p-2 w-80 outline-0 bg-white"
+                  type="text"
+                  value={customerAddress}
+                  onChange={(e) => setCustomerAddress(e.target.value)}
+                  placeholder="Enter address"
                 />
               </div>
             </div>
@@ -156,17 +212,15 @@ export default function ReservationDetailsPhase({
                     <input
                       type="radio"
                       name="paymentSystem"
-                      value="Full Payment"
-                      checked={paymentSystem === "Full Payment"}
+                      value="full"
+                      checked={paymentSystem === "full"}
                       onChange={(e) => setPaymentSystem(e.target.value)}
                     />
                     Full Payment
                   </label>
                 </div>
 
-                {SystemLabel ? (
-                  <p className="text-xs text-gray-500">Selected: {SystemLabel}</p>
-                ) : null}
+                {SystemLabel ? <p className="text-xs text-gray-500">Selected: {SystemLabel}</p> : null}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -185,7 +239,45 @@ export default function ReservationDetailsPhase({
               </div>
             </div>
 
-            
+            {/* NEW bank fields */}
+            <div className="flex flex-row gap-40 items-center">
+              <div className="flex flex-col gap-2">
+                <p className="text-sm">Bank Name</p>
+                <input
+                  className="bd rounded-lg p-2 w-80 outline-0 bg-white"
+                  type="text"
+                  value={paymentAccount}
+                  onChange={(e) => setPaymentAccount(e.target.value)}
+                  placeholder="Example: BCA"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <p className="text-sm">Account Name</p>
+                <input
+                  className="bd rounded-lg p-2 w-80 outline-0 bg-white"
+                  type="text"
+                  value={paymentAccountName}
+                  onChange={(e) => setPaymentAccountName(e.target.value)}
+                  placeholder="Example: Propechy Wedding Inc."
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-row gap-40 items-center">
+              <div className="flex flex-col gap-2">
+                <p className="text-sm">Account Number</p>
+                <input
+                  className="bd rounded-lg p-2 w-80 outline-0 bg-white"
+                  type="text"
+                  value={paymentAccountNumber}
+                  onChange={(e) => setPaymentAccountNumber(e.target.value)}
+                  placeholder="Enter account number"
+                />
+              </div>
+
+              <div className="w-80" />
+            </div>
           </div>
         </div>
       </div>
