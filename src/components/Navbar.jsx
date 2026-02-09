@@ -163,7 +163,6 @@ export default function Navbar() {
     { name: 'About Us', navigate: () => router.push('/about')},
     { name: 'Packages', navigate: () => router.push('/packagelisting') },
     { name: 'Vendors', navigate: () => navigateVendor() },
-    { name: 'Contact', navigate: () => router.push('/contact') },
   ];
  
 
@@ -179,12 +178,12 @@ export default function Navbar() {
                 ))}
             </ul>
 
-                <div className="w-65 flex justify-end items-center">
+                <div className="w-55 flex justify-end items-center">
                     {loading ? (
                         <LoadingSkeleton />
                     ) : user ? (
                         <div className="flex flex-row items-center gap-8">
-                          {(!profileLoading && !error) && <p className="text-sm">{"Welcome, " + userDoc?.username}</p>}
+                          {(!profileLoading && !error) && <p className="text-sm">{"Welcome " + userDoc?.username}</p>}
 
                           <ChatButton targetUid={ADMIN_UID}/>
                           
