@@ -133,7 +133,7 @@ export default function Invoicement({ booking, venue, updateBstatus }) {
 
     // TODO_DB_FIELDS: adjust venue pricing fields if needed
     const label = String(venue?.name || venue?.label || "Venue");
-    const unitPrice = num(venue?.price ?? venue?.unit_price ?? venue?.cost_per_unit);
+    const unitPrice = num(venue?.price ?? venue?.unit_price ?? venue?.cost_per_unit ?? venue?.base_price);
     const pricingUnit = String(venue?.pricing_unit || "per_event");
 
     if (!unitPrice) return null;

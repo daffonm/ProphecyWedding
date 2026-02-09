@@ -84,7 +84,7 @@ export default function BookListInformation({b, onClose}) {
             bookingStatus: "On Project"
         })
         patch("Invoices", invoice.id, {
-            payment_status: paymentMethod == "full"? "paid" : "half paid"
+            payment_status: paymentSystem == "full"? "paid" : "half paid"
         })
     }
 

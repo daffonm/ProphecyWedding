@@ -8,6 +8,7 @@ import SideMenu from "@/dashboard-components/SideMenu";
 import BookingLists from "@/dashboard-components/BookingLists";
 import VendorManagement, { VendorRegistrationList } from "@/dashboard-components/VendorManagement";
 import RegisteredVenues from "@/dashboard-components/RegisteredVenues";
+import Transaction from "@/dashboard-components/Transaction";
 
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 
@@ -157,7 +158,7 @@ export default function AdminDashboard() {
           patchBooking
         },
         sub: [
-          { name: "Transactions", component: null, props: {}, parent: "Booking Lists" },
+          { name: "Transactions", component: Transaction, props: {patch, bookings}, parent: "Booking Lists" },
         ],
       },
       { name: "Customer Relations", component: null, props: {} },

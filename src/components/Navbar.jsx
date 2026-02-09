@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useChat } from "@/context/ChatContext";
 import ChatButton from "./sub-components/ChatButton";
 
-const ADMIN_UID = "aon0NufF1EXHfwuUFr9JKHmWNpG2"
+const ADMIN_UID = "azEUp5PVaeR70v01bK4ufK2r3k72"
 
 function AccountMenu({ onClose }) {
   const [activeTab, setActiveTab] = useState(null);

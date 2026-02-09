@@ -13,14 +13,7 @@ export const bookingStatuses = [
         textColor : "text-yellow-200",
         desc: "Admin is reviewing your Draft"
     },
-    {
-        label : "Revision",
-        value : "REVISION",
-        color : "bg-pink-500",
-        textColor : "text-pink-200",
-        desc: "Draft needs specific adjustments from the customer"
-    },
-
+    
     { // FINAL FIXING PRICES
         label : "Quotation",
         value : "QUOTATION",
@@ -28,20 +21,29 @@ export const bookingStatuses = [
         textColor : "text-purple-200",
         desc: "Admin is finalizing the Prices and creating invoice"
     },
-
+    
     {
         label : "Payment Due",
         value : "PAYMENT",
-        color : "bg-green-500",
-        textColor : "text-green-200",
+        color : "bg-pink-500",
+        textColor : "text-pink-200",
         desc: "Waiting for customer's payment"
     },
+
+    {
+        label : "Payment Sent",
+        value : "PAYMENT_SENT",
+        color : "bg-green-500",
+        textColor : "text-green-200",
+        desc: "Please wait while admin is validating your payment"
+    },
+
     {
         label : "On Project",
         value : "PROJECT",
         color : "bg-blue-500",
         textColor : "text-blue-200",
-        desc: "The project is running"
+        desc: "Payment confirmed, The project is running"
     },
     {
         label : "Completed",

@@ -3,7 +3,7 @@ import { useChat } from "@/context/ChatContext"
 
 export default function ChatButton({targetUid = null}) {
 
-    const { openChat, openChatToUserId, hasUnread, unreadCount, getUnreadByChatId } = useChat()
+    const { openChat, openChatToUserId, hasUnread, unreadCount } = useChat()
 
 
     const handleClick = () => {
