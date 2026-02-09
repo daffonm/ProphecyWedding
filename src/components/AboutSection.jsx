@@ -16,11 +16,16 @@ export default function AboutSection() {
                   {/* Photo Gallery */}
                   <div className="container mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-gray-200 h-150  rounded-lg">
+                      <div className="bg-gray-200 h-128  rounded-lg overflow-hidden">
                         <img className="w-full h-full" src="/web-images/gelar.jpeg" alt="" />
                       </div>
-                      <div className="bg-gray-200 h-128 rounded-lg"></div>
-                      <div className="bg-gray-200 h-128 rounded-lg"></div>
+                      <div className="bg-gray-200 h-128 rounded-lg">
+                        <img className="w-full h-full" src="/web-images/home.jpeg" alt="" />
+
+                      </div>
+                      <div className="bg-gray-200 h-128 rounded-lg">
+                        <img className="w-full h-full" src="/web-images/home2.jpeg" alt="" />
+                      </div>
                     </div>
                   </div>
         

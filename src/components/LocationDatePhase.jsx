@@ -55,7 +55,7 @@ function VenueBox({ v, selectedVenue, setVenue, normalizedGuest }) {
       }`}
     >
       {/* ImageBox placeholder */}
-      <div className="bg-gray-200 h-32 w-full" />
+      <img className="bg-gray-200 h-65 w-full" src={v.img_url} />
 
       <div className="p-4 space-y-3">
         <div className="space-y-1">

@@ -94,9 +94,9 @@ export default function FirestoreSeederPage() {
       // Example: Existing collection "Bookings"
       // - Use addDoc if you want auto document IDs
 
-      Vendors : {
+      Venues : {
         mode: "addDoc",
-        docs: VENDORS,
+        docs: VENUES,
       },
 
 
@@ -127,6 +127,7 @@ export default function FirestoreSeederPage() {
 
     try {
       log("Starting seed...");
+      log("Starting seedssss...");
 
       // Optional: sanity check that this page isn't accidentally used in production
       log("Tip: remove this page after dev.");

@@ -7,6 +7,7 @@ export const VENUES = [
     capacity: 500,
     pricing_unit: "per_day",
     base_price: 85000000,
+    img_url : "/web-images/balai sartika.jpg",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "MC_FORMAL", "DJ"]
   },
   {
@@ -17,6 +18,7 @@ export const VENUES = [
     capacity: 400,
     pricing_unit: "per_day",
     base_price: 70000000,
+    img_url : "/web-images/graha batununggal.jpg",
     allowed_services: ["DECOR_FULL", "PHOTO_RECEPTION", "MC_FORMAL"]
   },
   {
@@ -27,6 +29,7 @@ export const VENUES = [
     capacity: 800,
     pricing_unit: "per_day",
     base_price: 120000000,
+    img_url : "/web-images/bccgedung_24.jpg",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "VIDEO_CINEMATIC", "MC_FORMAL"]
   },
   {
@@ -37,6 +40,7 @@ export const VENUES = [
     capacity: 300,
     pricing_unit: "per_day",
     base_price: 34000000,
+    img_url : "/web-images/bumi samami.jpg",
     allowed_services: ["DECOR_BASIC", "PHOTO_RECEPTION", "MC_CASUAL"]
   },
   {
@@ -47,6 +51,7 @@ export const VENUES = [
     capacity: 1000,
     pricing_unit: "per_day",
     base_price: 160000000,
+    img_url : "/web-images/sudirman.jpeg",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "LIVE_BAND", "MC_FORMAL"]
   },
 
@@ -58,6 +63,7 @@ export const VENUES = [
     capacity: 500,
     pricing_unit: "per_day",
     base_price: 495000000,
+    img_url : "/web-images/hilton garden.jpg",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "VIDEO_CINEMATIC", "LIVE_BAND", "MC_FORMAL"]
   },
   {
@@ -68,6 +74,7 @@ export const VENUES = [
     capacity: 600,
     pricing_unit: "per_day",
     base_price: 1315900000,
+    img_url : "/web-images/fairmont Jakarta.jpg",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "VIDEO_CINEMATIC", "MC_FORMAL"]
   },
   {
@@ -78,6 +85,7 @@ export const VENUES = [
     capacity: 400,
     pricing_unit: "per_day",
     base_price: 80000000,
+    img_url : "/web-images/krakatau ballroom",
     allowed_services: ["DECOR_FULL", "PHOTO_RECEPTION", "MC_FORMAL"]
   },
   {
@@ -88,6 +96,7 @@ export const VENUES = [
     capacity: 300,
     pricing_unit: "per_day",
     base_price: 60000000,
+    img_url : "/web-images/is plaza.jpg",
     allowed_services: ["DECOR_FULL", "PHOTO_RECEPTION", "MC_FORMAL"]
   },
   {
@@ -98,6 +107,7 @@ export const VENUES = [
     capacity: 350,
     pricing_unit: "per_day",
     base_price: 75000000,
+    img_url : "/web-images/balairung.jpeg",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "MC_FORMAL"]
   },
 
@@ -109,6 +119,7 @@ export const VENUES = [
     capacity: 400,
     pricing_unit: "per_day",
     base_price: 88000000,
+    img_url : "/web-images/brahma varuna.jpg",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "MC_FORMAL"]
   },
   {
@@ -119,6 +130,7 @@ export const VENUES = [
     capacity: 300,
     pricing_unit: "per_day",
     base_price: 78000000,
+    img_url : "/web-images/bumi sawargi.webp",
     allowed_services: ["DECOR_FULL", "PHOTO_RECEPTION", "MC_FORMAL"]
   },
   {
@@ -129,6 +141,7 @@ export const VENUES = [
     capacity: 550,
     pricing_unit: "per_day",
     base_price: 85000000,
+    img_url : "/web-images/semarang.jpg",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "MC_FORMAL"]
   },
   {
@@ -139,6 +152,7 @@ export const VENUES = [
     capacity: 700,
     pricing_unit: "per_day",
     base_price: 120000000,
+    img_url : "/web-images/surabaya.png",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "VIDEO_CINEMATIC", "MC_FORMAL"]
   },
   {
@@ -149,10 +163,10 @@ export const VENUES = [
     capacity: 450,
     pricing_unit: "per_day",
     base_price: 150000000,
+    img_url : "/web-images/bali ocean.jpg",
     allowed_services: ["DECOR_FULL", "PHOTO_FULLDAY", "MC_FORMAL"]
   }
 ]
-
 export const PACKAGES = [
   {
     code: "STANDARD",
