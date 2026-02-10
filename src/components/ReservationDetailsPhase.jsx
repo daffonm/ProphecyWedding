@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import Overlay from "./Overlay";
+import { SuratDp } from "./SuratDP";
 
 function safeTrim(v) {
   return String(v ?? "").trim();
@@ -70,9 +72,17 @@ export default function ReservationDetailsPhase({
     return "";
   };
 
+  const [toggleContract, setToggleContract] = useState(false)
+  const [contract, setContract] = useState(false)
+
   const handleNext = async () => {
     const msg = validate();
     if (msg) return onNext({ ok: false, message: msg });
+
+    if (!contract) {
+      setToggleContract(true)
+      return
+    }
 
     const draft = {
       reservation_details: {
@@ -101,6 +111,18 @@ export default function ReservationDetailsPhase({
 
   return (
     <div className="flex flex-col justify-between h-full">
+
+    <Overlay
+      isOpen={toggleContract}
+      onClose={() => setToggleContract(false)}
+      contentClassName="bg-white w-200 h-screen p-8 overflow-y-scroll absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-xl m-4 mb-8"
+    >
+      <SuratDp onConfirm={() => {
+        setContract(true)
+        setToggleContract(false)
+      }} />
+    </Overlay>
+
       <div className="overflow-scroll h-full">
         <div>
           <h2 className="text-2xl">Reservation Details</h2>

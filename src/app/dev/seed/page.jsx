@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useDb } from "@/context/DbContext";
 
 import { SERVICES, VENDORS, PACKAGES, VENUES, PRODUCT } from "@/utils/seedDummy";
+import DevTools from "../DevTools";
 
 /**
  * Drop this file anywhere in your project, e.g:
@@ -94,9 +95,9 @@ export default function FirestoreSeederPage() {
       // Example: Existing collection "Bookings"
       // - Use addDoc if you want auto document IDs
 
-      Venues : {
+      Vendors : {
         mode: "addDoc",
-        docs: VENUES,
+        docs: VENDORS,
       },
 
 
@@ -249,6 +250,8 @@ export default function FirestoreSeederPage() {
       >
         {logs.join("\n")}
       </pre>
+
+      <DevTools />
     </div>
   );
 }

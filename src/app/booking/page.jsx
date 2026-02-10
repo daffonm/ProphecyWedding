@@ -535,16 +535,19 @@ await updateBooking(
   // Render by phase
   // =========================
   return (
-    <div className="flex flex-row ungu">
+    <div className="flex flex-row justify-end">
       <div className="
-      bg-[url(/web-images/booking-bg`.jpg)]
+      absolute
+      bg-[url(/web-images/booking.jpeg)]
       bg-center
-      bg-linear-to-r from-green-200 to-green-900
-      bg-amber-200 h-screen w-120">
+      bg-linear-to-r from-transparent to-green-900
+      opacity-60
+      w-90 left-0 -z-1
+      h-screen ">
       
       </div>
       {/* Form */}
-      <div className="container w-full h-screen p-8 overflow-hidden">
+      <div className="container w-280 h-screen p-8 overflow-hidden rounded-l-3xl bg-gray-50">
         {bookingPhase === 1 && (
           <PackagePhase
             packages={packages}

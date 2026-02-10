@@ -60,7 +60,7 @@ export default function PackagePhase({
   // khusus custom: checked service codes
   const [addOns, setAddOns] = useState([]); // array of service.code
 
-  const pkgStyle = "rounded-xl w-80";
+  const pkgStyle = "rounded-2xl w-80";
 
   // Fetch ALL Services once
   const allServicesQuery = useMemo(() => {

@@ -47,6 +47,12 @@ export default function Transaction({ patch, bookings }) {
         updatedAt: serverTimestamp(),
       });
 
+      await patch("Bookings", bookingId, {
+        bookingStatus: "On Project", // TODO: pastikan enum bener
+        updatedAt: serverTimestamp(),
+      });
+
+
       // 2) upsert transaction doc (docId deterministik = bookingId)
       //    ini otomatis "update kalau ada, create kalau belum ada"
       await setDoc(

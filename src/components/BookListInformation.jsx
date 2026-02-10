@@ -81,7 +81,7 @@ export default function BookListInformation({b, onClose}) {
 
     const onPaymentProceed = () => {
         patch("Bookings", b.id, {
-            bookingStatus: "On Project"
+            bookingStatus: "Payment Sent"
         })
         patch("Invoices", invoice.id, {
             payment_status: paymentSystem == "full"? "paid" : "half paid"
@@ -185,7 +185,7 @@ export default function BookListInformation({b, onClose}) {
                     </div>
 
 
-                    {bookingStatus === "Payment Due" &&
+                    {bookingStatus === ("Payment Due" || "Payment Sent" || "On Project" || "Completed") &&
                         <div className="flex flex-col gap-8">
                             <button 
                             className="w-50 "
@@ -198,12 +198,17 @@ export default function BookListInformation({b, onClose}) {
                                 </div>
                                 <p className="text-sm">click here to view document</p>
                             </button>
-                            <div className="flex flex-col gap-4">
-                                <button 
-                                onClick={onPaymentProceed}
-                                className="button1 rounded-lg">Proceed to Payment</button>
-                                <button className="text-red-500 rounded-lg text-sm underline">Reject this Payment</button>
-                            </div>
+
+                            {bookingStatus === "Payment Due" &&
+                                <div className="flex flex-col gap-4">
+                                    <button 
+                                    onClick={onPaymentProceed}
+                                    className="button1 rounded-lg">Proceed to Payment</button>
+                                    <button className="text-red-500 rounded-lg text-sm underline">Reject this Payment</button>
+                                </div>
+                            }
+
+
                         </div>
                     
                     }

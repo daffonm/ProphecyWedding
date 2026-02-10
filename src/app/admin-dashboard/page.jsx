@@ -3,6 +3,8 @@
 
 import { useMemo, useState, useCallback } from "react";
 
+import DevTools from "../dev/DevTools";
+
 import SideMenu from "@/dashboard-components/SideMenu";
 
 import BookingLists from "@/dashboard-components/BookingLists";
@@ -236,6 +238,9 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+          <DevTools />
+
     </section>
   );
 }

@@ -402,7 +402,7 @@ export default function VendorAssignment({
               </h1>
 
               {/* Vertical Scroll Container */}
-              <div className="vertical-x-scroll no-scrollbar">
+              <div className="vertical-x-scroll w-200 no-scrollbar">
                 <div className="flex flex-row gap-6">
                   {availableVendorsForActive.length ? (
                     availableVendorsForActive.map((v) => (

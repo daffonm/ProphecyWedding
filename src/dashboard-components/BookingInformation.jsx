@@ -115,7 +115,7 @@ export default function BookingInformation ({b, u, onClose, action}) {
               className={`border rounded-xl overflow-hidden bg-white flex flex-col justify-between}`}
             >
               {/* ImageBox placeholder */}
-              <div className="bg-gray-200 h-32 w-full" />
+              <img className="bg-gray-200 h-62 w-full" src={v?.img_url} />
         
               <div className="p-4 space-y-3">
                 <div className="space-y-1">

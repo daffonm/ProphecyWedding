@@ -4,6 +4,8 @@ import HeroSection from "@/components/HeroSection";
 import DecorSection from "@/components/DecorSection";
 import ClientReviewSection from "@/components/ClientReviewSection";
 
+import DevTools from "./dev/DevTools";
+
 export default function Home() {
 
   return (
@@ -18,6 +20,9 @@ export default function Home() {
         <AboutSection />
         <DecorSection />
         <ClientReviewSection />
+
+        {/* Dev Tools */}
+        <DevTools />
 
       </div>
     </main>

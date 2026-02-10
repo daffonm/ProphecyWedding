@@ -10,6 +10,7 @@ import { useCollection } from "@/hooks/useCollection";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import ProductServices from "@/dashboard-components/ProductServices";
 import VendorEvent from "@/dashboard-components/VendorEvent";
+import DevTools from "../dev/DevTools";
 
 export default function VendorHub({}) {
 
@@ -18,7 +19,7 @@ export default function VendorHub({}) {
 
 
     // ===== load list service (optional checkbox)
-  
+  console.log(user?.uid)
    
     const vendorQuery = useMemo(() => {
         return () => user?.uid ? query(colRef("Vendors"), where("user_id", "==", user.uid)) : null;
@@ -126,7 +127,7 @@ export default function VendorHub({}) {
                 </div>
 
                 {/* Menu Nav */}
-                <div className="flex flex-col items-baseline gap-4 px-4">
+                <div className="flex flex-col items-baseline gap-4 px-4 w-70">
                     <button
                     className={`p-3 pl-6 w-full  rounded-xl flex flex-row justify-start
                     hover:pl-8 transition-all duration-300 ease-in-out ${activeMenu === "Product & Services" && "bd-6 pl-8 bg-emerald-500 text-white"}`}
@@ -185,6 +186,8 @@ export default function VendorHub({}) {
                     />
                 )}
             </div>
+
+            <DevTools />
         </div>
     )
 }

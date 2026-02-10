@@ -25,7 +25,7 @@ function formatTimestamp(ts) {
   }
 }
 
-const ADMIN_UID = "aon0NufF1EXHfwuUFr9JKHmWNpG2"
+const ADMIN_UID = "azEUp5PVaeR70v01bK4ufK2r3k72"
 
 export default function CustomerBookingCard({b, toggleDetail}) {
     

@@ -1,4 +1,10 @@
+"use client"
+import { useRouter } from "next/navigation"
+
 export default function DecorSection({}) {
+    const router = useRouter();
+
+
     return (
         <div className="w-screen h-228 relative mt-80 flex flex-col justify-center items-center bg-linear-to-b from-white-100 to-fuchsia-100">
 
@@ -8,7 +14,7 @@ export default function DecorSection({}) {
                 <p className="text-5xl">Your perfect</p>
                 <h1 className="text-8xl section-title">Wedding</h1>
                 <p className="text-4xl">Will come True</p>
-                <button className="button1 mt-4">See our pricelist</button>
+                <button className="button1 mt-4" onClick={() => router.push("/packagelisting")}>See our pricelist</button>
             </div>
         </div>
     )
