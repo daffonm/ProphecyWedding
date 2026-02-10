@@ -79,6 +79,13 @@ export default function BookListInformation({b, onClose}) {
         window.open(`/invoices/${invoice?.id}`, "_blank")
     }
 
+    const handlePaymentGateway = () => {
+        if (!invoice) return
+        if (invLoading || invError) return
+
+        window.open(`/payment-gateway/${invoice?.id}`, "_blank", 'width=600,height=400')
+    }
+
     const onPaymentProceed = () => {
         patch("Bookings", b.id, {
             bookingStatus: "Payment Sent"
@@ -202,7 +209,10 @@ export default function BookListInformation({b, onClose}) {
                             {bookingStatus === "Payment Due" &&
                                 <div className="flex flex-col gap-4">
                                     <button 
-                                    onClick={onPaymentProceed}
+                                    onClick={() => {
+                                        onPaymentProceed()
+                                        handlePaymentGateway()
+                                    }}
                                     className="button1 rounded-lg">Proceed to Payment</button>
                                     <button className="text-red-500 rounded-lg text-sm underline">Reject this Payment</button>
                                 </div>

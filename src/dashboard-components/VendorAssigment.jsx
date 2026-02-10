@@ -427,7 +427,7 @@ export default function VendorAssignment({
             </div>
 
             {/* Draft final handleSave dan tombolnya jangan diubah strukturnya, cuma ditampilkan di sini */}
-            <div className="mt-8 flex items-center gap-3">
+            {/* <div className="mt-8 flex items-center gap-3">
               <button
                 className="border px-4 py-2 rounded-xl"
                 onClick={handleSaveDraft}
@@ -436,7 +436,7 @@ export default function VendorAssignment({
                 {saving ? "Saving..." : "Save Draft"}
               </button>
               {saveErr ? <p className="text-sm text-red-500">Gagal save draft</p> : null}
-            </div>
+            </div> */}
 
 
 
